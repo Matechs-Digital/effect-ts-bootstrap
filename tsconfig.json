@@ -3,7 +3,8 @@
     "lib": ["ES2019"],
     "target": "ES5",
     "strict": true,
-    "outDir": "lib"
+    "outDir": "lib",
+    "noErrorTruncation": true
   },
   "include": ["src/**/*.ts"]
 }
