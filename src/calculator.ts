@@ -13,11 +13,14 @@ export function LiveCalculator(Console: Console) {
     add: (x: number, y: number) => T.effectTotal(() => x + y),
     mul: (x: number, y: number) => T.effectTotal(() => x * y),
     gen: <A>(a: A) => T.effectTotal(() => a),
-    log: (n: number) => Console.log(`Result: ${n}`)
+    log: (n: number) => Console.log(`Result: ${n}`),
+    open: Console.log("Prepare..."),
+    close: Console.log("Close...")
   }
 }
 
-export interface Calculator extends ReturnType<typeof LiveCalculator> {}
+export interface Calculator
+  extends Omit<ReturnType<typeof LiveCalculator>, "open" | "close"> {}
 
 // module tag
 export const Calculator = has<Calculator>()
@@ -36,12 +39,6 @@ export const { gen } = T.deriveAccessM(Calculator)(["gen"])
 export const { factorFun } = T.deriveAccess(Calculator)(["factorFun", "gen"])
 
 export const Live = L.bracketConstructor(Calculator)(LiveCalculator)(Console)(
-  (_) =>
-    T.effectTotal(() => {
-      console.log("Prepare...")
-    }),
-  (_) =>
-    T.effectTotal(() => {
-      console.log("Close...")
-    })
+  (_) => _.open,
+  (_) => _.close
 )

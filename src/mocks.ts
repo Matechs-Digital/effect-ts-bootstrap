@@ -10,7 +10,8 @@ export function MockCalculator(): Calculator {
     base: T.succeed(0),
     factor: 0,
     gen: T.succeed,
-    factorFun: () => 0
+    factorFun: () => 0,
+    log: () => T.unit
   }
 }
 
