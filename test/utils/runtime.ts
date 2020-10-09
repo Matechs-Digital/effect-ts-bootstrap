@@ -42,7 +42,7 @@ export function testRuntime<R>(self: Layer<T.DefaultEnv, never, R>) {
   })
 
   return {
-    runPromise: <E, A>(self: T.Effect<R, E, A>) =>
+    runPromise: <E, A>(self: T.Effect<R & DefaultEnv, E, A>) =>
       T.runPromise(
         T.suspend(() =>
           pipe(env.get, (e) =>
@@ -50,7 +50,7 @@ export function testRuntime<R>(self: Layer<T.DefaultEnv, never, R>) {
           )
         )
       ),
-    runPromiseExit: <E, A>(self: T.Effect<R, E, A>) =>
+    runPromiseExit: <E, A>(self: T.Effect<R & DefaultEnv, E, A>) =>
       T.runPromiseExit(
         T.suspend(() =>
           pipe(env.get, (e) =>

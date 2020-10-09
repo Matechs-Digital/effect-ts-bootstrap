@@ -12,12 +12,12 @@ const runtime = pipe(PG.Live, L.using(TestContainerPg), testRuntime)
 describe("DockerComposeEnvironment", () => {
   it("reads config", async () => {
     const response = await pipe(
-      T.accessServiceM(PG.PgClient)((_) =>
-        pipe(
-          _.client((pc) =>
-            T.fromPromiseDie(() => pc.query("SELECT $1::text as name", ["Michael"]))
-          ),
-          T.map((r) => r.rows[0].name)
+      PG.withClientM((_) =>
+        _((client) =>
+          pipe(
+            T.fromPromise(() => client.query("SELECT $1::text as name", ["Michael"])),
+            T.map((_) => _.rows[0].name)
+          )
         )
       ),
       runtime.runPromiseExit
