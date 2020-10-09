@@ -35,4 +35,13 @@ export const { gen } = T.deriveAccessM(Calculator)(["gen"])
 // access functions
 export const { factorFun } = T.deriveAccess(Calculator)(["factorFun", "gen"])
 
-export const Live = L.fromConstructor(Calculator)(LiveCalculator)(Console)
+export const Live = L.bracketConstructor(Calculator)(LiveCalculator)(Console)(
+  (_) =>
+    T.effectTotal(() => {
+      console.log("Prepare...")
+    }),
+  (_) =>
+    T.effectTotal(() => {
+      console.log("Close...")
+    })
+)
