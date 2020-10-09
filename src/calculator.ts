@@ -6,7 +6,7 @@ import { Console } from "./console"
 
 // module definition
 export function LiveCalculator(Console: Console) {
-  return {
+  return T.succeed({
     factor: 2,
     factorFun: () => 3,
     base: T.succeed(1),
@@ -16,11 +16,11 @@ export function LiveCalculator(Console: Console) {
     log: (n: number) => Console.log(`Result: ${n}`),
     open: Console.log("Prepare..."),
     close: Console.log("Close...")
-  }
+  })
 }
 
 export interface Calculator
-  extends Omit<ReturnType<typeof LiveCalculator>, "open" | "close"> {}
+  extends Omit<T._A<ReturnType<typeof LiveCalculator>>, "open" | "close"> {}
 
 // module tag
 export const Calculator = has<Calculator>()
@@ -38,7 +38,7 @@ export const { gen } = T.deriveAccessM(Calculator)(["gen"])
 // access functions
 export const { factorFun } = T.deriveAccess(Calculator)(["factorFun", "gen"])
 
-export const Live = L.bracketConstructor(Calculator)(LiveCalculator)(Console)(
+export const Live = L.bracketConstructorM(Calculator)(LiveCalculator)(Console)(
   (_) => _.open,
   (_) => _.close
 )
