@@ -13,23 +13,26 @@ export interface PgConfig {
 
 export const PgConfig = has<PgConfig>()
 
+export const { config: withConfig } = T.deriveAccess(PgConfig)(["config"])
+
 export interface PgClient {
-  withClient: <R, E, A>(
+  withClientM: <R, E, A>(
     body: (_: PG.PoolClient) => T.Effect<R, E, A>
   ) => T.Effect<R & C.HasClock, E, A>
 }
 
 export const PgClient = has<PgClient>()
 
-export const { withClient: withClientM } = T.deriveAccessM(PgClient)(["withClient"])
-export const { withClient } = T.deriveAccess(PgClient)(["withClient"])
+export function withClientM<R, E, A>(body: (_: PG.PoolClient) => T.Effect<R, E, A>) {
+  return T.accessServiceM(PgClient)((_) => _.withClientM(body))
+}
 
 export const Live = pipe(
-  T.accessService(PgConfig)((_) => new PG.Pool(_.config)),
+  withConfig((_) => new PG.Pool(_)),
   M.make((_) => T.fromPromiseDie(() => _.end())),
   M.map(
     (pool): PgClient => ({
-      withClient: <R, E, A>(body: (_: PG.PoolClient) => T.Effect<R, E, A>) =>
+      withClientM: <R, E, A>(body: (_: PG.PoolClient) => T.Effect<R, E, A>) =>
         T.bracket_(
           T.orDie(
             T.retry_(
