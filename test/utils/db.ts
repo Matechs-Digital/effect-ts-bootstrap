@@ -21,7 +21,7 @@ export const TestContainerPg = pipe(
   }),
   M.makeExit((d) =>
     T.fromPromiseDie(async () => {
-      await d.stop()
+      await d.down()
     })
   ),
   M.map(
