@@ -176,17 +176,17 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@effect-ts/core@^0.3.8":
-  version "0.3.8"
-  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.3.8.tgz#1b044ad24318fe9a259671d1b124493bd9fb29cb"
-  integrity sha512-bBJz6Fb/YMs+BujajsoobuzsbO9KNROgH7HncUS+AK+LNlqRI3VSY9JMGdWMO9S6pLFRqw31EpqfTQcWr0G1aA==
+"@effect-ts/core@^0.3.9":
+  version "0.3.9"
+  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.3.9.tgz#1e7ad55655b6ed067ce873e61fb670edda42d5bd"
+  integrity sha512-8Af+0NS6E6ivTWp5guZyAbQwuhpxDUxdd7uLGate8sFPcX0xwlqZZ3vXfOIM0gQy4gFyaHY6HZTcZlPrEIuu0A==
   dependencies:
-    "@effect-ts/system" "^0.1.9"
+    "@effect-ts/system" "^0.1.10"
 
-"@effect-ts/system@^0.1.9":
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/@effect-ts/system/-/system-0.1.9.tgz#00da66f6ac0bc2e25f599cb1d05403384bc298fc"
-  integrity sha512-9CT3JlOIZpXFWqFx2BwgBvNJvzolEpk8gJFSa2HDhWXJ3yrOMqPOipax821a7c5JVs7RU13CDC48h869nMUftQ==
+"@effect-ts/system@^0.1.10":
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/@effect-ts/system/-/system-0.1.10.tgz#016f261571c4d5dc87b35dadbba0dcb1017d6d80"
+  integrity sha512-BggIxFzg/T3r8Rc7EjnHodoaobIW0E28rneIY3UZSb67oV1uVORjC6v4u38tOOQFKbWNESFZ4QTQpbhkWNKAOA==
 
 "@eslint/eslintrc@^0.1.3":
   version "0.1.3"

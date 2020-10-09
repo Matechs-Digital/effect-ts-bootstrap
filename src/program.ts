@@ -1,4 +1,5 @@
 import * as T from "@effect-ts/core/Effect"
+import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
 import * as Calc from "./calculator"
@@ -16,14 +17,9 @@ export const program = pipe(
   T.chain(Calc.log)
 )
 
+export const Live = pipe(Calc.Live, L.using(Console.Live))
+
 // main function (unsafe)
 export function main() {
-  return pipe(
-    program,
-    T.provideServiceM(Calc.Calculator)(
-      T.accessService(Console.Console)(Calc.LiveCalculator)
-    ),
-    T.provideService(Console.Console)(Console.LiveConsole()),
-    T.runMain
-  )
+  return pipe(program, T.provideSomeLayer(Live), T.runMain)
 }

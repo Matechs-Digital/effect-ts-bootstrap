@@ -1,7 +1,8 @@
 import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
+import * as L from "@effect-ts/core/Effect/Layer"
 
-import type { Console } from "./console"
+import { Console } from "./console"
 
 // module definition
 export function LiveCalculator(Console: Console) {
@@ -33,3 +34,5 @@ export const { gen } = T.deriveAccessM(Calculator)(["gen"])
 
 // access functions
 export const { factorFun } = T.deriveAccess(Calculator)(["factorFun", "gen"])
+
+export const Live = L.fromConstructor(Calculator)(LiveCalculator)(Console)
