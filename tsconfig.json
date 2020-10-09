@@ -4,7 +4,8 @@
     "target": "ES5",
     "strict": true,
     "outDir": "lib",
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "noEmit": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
 }
