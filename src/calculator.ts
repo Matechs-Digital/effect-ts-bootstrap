@@ -8,7 +8,7 @@ import { Console } from "./console"
 export function LiveCalculator(Console: Console) {
   return T.succeed({
     factor: 2,
-    factorFun: () => 3,
+    factorFun: (): number => 3,
     base: T.succeed(1),
     add: (x: number, y: number) => T.effectTotal(() => x + y),
     mul: (x: number, y: number) => T.effectTotal(() => x * y),

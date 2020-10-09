@@ -1,4 +1,4 @@
-import { main } from "./program"
+import { main } from "./main"
 
 // run the live program
 const cancel = main()
