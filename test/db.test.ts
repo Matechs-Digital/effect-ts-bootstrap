@@ -6,12 +6,9 @@ import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import * as fc from "fast-check"
 
-import {
-  createUser,
-  Live as UserPersistenceLive,
-  UserMigrations
-} from "../src/api/user"
+import { createUser, Live as UserPersistenceLive } from "../src/api/user"
 import * as PgClient from "../src/db/PgClient"
+import { PgMigrations } from "../src/db/PgMigrations"
 import * as PgPool from "../src/db/PgPool"
 import { CreateUser, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
@@ -23,15 +20,7 @@ import { testRuntime } from "./utils/runtime"
 describe("Integration Suite", () => {
   const runtime = pipe(
     L.all(UserPersistenceLive),
-    L.using(
-      TestMigrations(
-        UserMigrations,
-        (_): UserMigrations => ({
-          _tag: "UserMigrations",
-          migrations: _.migrations
-        })
-      )("users")
-    ),
+    L.using(TestMigrations),
     L.using(PgPool.Live),
     L.using(PgConfigTest),
     L.using(TestContainersLive),
@@ -42,7 +31,7 @@ describe("Integration Suite", () => {
     it("migrations are being applied", async () => {
       expect(
         await pipe(
-          T.accessService(UserMigrations)((_) => _.migrations.length),
+          T.accessService(PgMigrations)((_) => _.migrations.length),
           runtime.runPromise
         )
       ).toEqual(1)

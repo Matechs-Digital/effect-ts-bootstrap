@@ -3,17 +3,10 @@ import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { flow } from "@effect-ts/core/Function"
 
-import type { Migrations } from "../db/Migrations"
 import * as PG from "../db/PgClient"
 import { decodeUser, validateCreateUser } from "../model/user"
 
-export interface UserMigrations extends Migrations {
-  _tag: "UserMigrations"
-}
-
-export const UserMigrations = has<UserMigrations>()
-
-export const makeUserPersistence = (_: UserMigrations) => ({
+export const makeUserPersistence = () => ({
   createUser: flow(
     validateCreateUser,
     T.chain(({ name }) =>
@@ -35,8 +28,6 @@ export interface UserPersistence extends ReturnType<typeof makeUserPersistence> 
 
 export const UserPersistence = has<UserPersistence>()
 
-export const Live = L.fromConstructor(UserPersistence)(makeUserPersistence)(
-  UserMigrations
-)
+export const Live = L.fromConstructor(UserPersistence)(makeUserPersistence)()
 
 export const { createUser } = T.deriveLifted(UserPersistence)(["createUser"], [], [])
