@@ -1,13 +1,17 @@
+import type { Has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 import * as Lens from "@effect-ts/monocle/Lens"
 
-import { createUser } from "../src/api/user"
+import type { UserPersistence } from "../src/api/user"
+import { createUser, Live as UserPersistenceLive } from "../src/api/user"
 import * as PgClient from "../src/db/PgClient"
+import type { PgConfig } from "../src/db/PgConfig"
 import * as PgPool from "../src/db/PgPool"
 import { User } from "../src/model/user"
+import type { TestContainers } from "./utils/containers"
 import { TestContainersLive } from "./utils/containers"
 import { PgConfigTest } from "./utils/db"
 import { Migrations, TestMigration } from "./utils/migration"
@@ -21,12 +25,29 @@ const runtime = pipe(
   testRuntime
 )
 
+const persistence = pipe(UserPersistenceLive, L.using(PgClient.Live))
+
+export type TestEnv = Has<UserPersistence> &
+  Has<PgClient.PgClient> &
+  Has<Migrations> &
+  Has<PgPool.PgPool> &
+  Has<PgConfig> &
+  Has<TestContainers>
+
+export function runPromise<E, A>(_: T.Effect<TestEnv, E, A>) {
+  return pipe(_, T.provideSomeLayer(persistence), runtime.runPromise)
+}
+
+export function runPromiseExit<E, A>(_: T.Effect<TestEnv, E, A>) {
+  return pipe(_, T.provideSomeLayer(persistence), runtime.runPromiseExit)
+}
+
 describe("Live Db", () => {
   it("migrations are being applied", async () => {
     expect(
       await pipe(
         T.accessService(Migrations)((_) => _.migrations.length),
-        runtime.runPromise
+        runPromise
       )
     ).toEqual(1)
   })
@@ -39,8 +60,7 @@ describe("Live Db", () => {
           T.map((_): string => _.rows[0].name)
         )
       ),
-      PgClient.provide,
-      runtime.runPromiseExit
+      runPromiseExit
     )
 
     expect(response).toEqual(Ex.succeed("Michael"))
@@ -59,8 +79,7 @@ describe("Live Db", () => {
           T.map((_) => _.rows)
         )
       ),
-      PgClient.provide,
-      runtime.runPromiseExit
+      runPromiseExit
     )
 
     expect(response).toEqual(
@@ -93,8 +112,7 @@ describe("Live Db", () => {
           T.map((_) => _.rows)
         )
       ),
-      PgClient.provide,
-      runtime.runPromiseExit
+      runPromiseExit
     )
 
     expect(response).toEqual(
@@ -120,11 +138,7 @@ describe("Live Db", () => {
   })
 
   it("creates a new user", async () => {
-    const result = await pipe(
-      createUser({ name: "Michael" }),
-      PgClient.provide,
-      runtime.runPromiseExit
-    )
+    const result = await pipe(createUser({ name: "Michael" }), runPromiseExit)
 
     const nameAndId = pipe(User.lens, Lens.props("name", "id"))
 

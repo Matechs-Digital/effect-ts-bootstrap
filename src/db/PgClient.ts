@@ -3,10 +3,11 @@ import { has } from "@effect-ts/core/Classic/Has"
 import type { Effect } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import type { Clock } from "@effect-ts/core/Effect/Clock"
+import * as L from "@effect-ts/core/Effect/Layer"
+import * as M from "@effect-ts/core/Effect/Managed"
 import type * as PG from "pg"
 
-import type { PgPool } from "./PgPool"
-import { withPoolClientM } from "./PgPool"
+import { PgPool, withPoolClientM } from "./PgPool"
 
 export interface PgClient {
   client: PG.ClientBase
@@ -22,3 +23,7 @@ export function provide<R, E, A>(
 ): Effect<R & Has<Clock> & Has<PgPool>, E, A> {
   return withPoolClientM((_) => T.provideService(PgClient)({ client: _ })(self))
 }
+
+export const Live = L.fromConstructorManaged(PgClient)(({ managedClient }: PgPool) =>
+  M.map_(managedClient, (client) => ({ client }))
+)(PgPool)
