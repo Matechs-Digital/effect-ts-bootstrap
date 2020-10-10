@@ -40,7 +40,7 @@ export const Live = pipe(
               S.whileOutput_(S.exponential(100), (n) => n < 1000)
             )
           ),
-          (p) => body(p),
+          body,
           (p) => T.effectTotal(() => p.release())
         )
     })
