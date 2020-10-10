@@ -1,30 +1,28 @@
-import type { DefaultEnv } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import * as C from "@effect-ts/core/Effect/Cause"
-import { FiberFailure } from "@effect-ts/core/Effect/Cause"
 import * as Ex from "@effect-ts/core/Effect/Exit"
-import type { Layer } from "@effect-ts/core/Effect/Layer"
-import type { ReleaseMap } from "@effect-ts/core/Effect/Managed"
+import type * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
-import { releaseAll } from "@effect-ts/core/Effect/Managed"
 import { pipe, tuple } from "@effect-ts/core/Function"
 import { AtomicReference } from "@effect-ts/system/Support/AtomicReference"
 
 export interface TestRuntime<R> {
-  runPromise: <E, A>(self: T.Effect<R & DefaultEnv, E, A>) => Promise<A>
-  runPromiseExit: <E, A>(self: T.Effect<R & DefaultEnv, E, A>) => Promise<Ex.Exit<E, A>>
+  runPromise: <E, A>(self: T.Effect<R & T.DefaultEnv, E, A>) => Promise<A>
+  runPromiseExit: <E, A>(
+    self: T.Effect<R & T.DefaultEnv, E, A>
+  ) => Promise<Ex.Exit<E, A>>
 }
 
-export function testRuntime<R>(self: Layer<T.DefaultEnv, never, R>): TestRuntime<R> {
+export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>): TestRuntime<R> {
   const env = new AtomicReference<R | undefined>(undefined)
-  const relMap = new AtomicReference<ReleaseMap | undefined>(undefined)
+  const relMap = new AtomicReference<M.ReleaseMap | undefined>(undefined)
 
   beforeAll(async () => {
     const res = await pipe(
       T.do,
       T.bind("rm", () => M.makeReleaseMap),
       T.bind("res", ({ rm }) =>
-        T.provideSome_(self.build.effect, (r: DefaultEnv) => tuple(r, rm))
+        T.provideSome_(self.build.effect, (r: T.DefaultEnv) => tuple(r, rm))
       ),
       T.tap(({ res, rm }) =>
         T.effectTotal(() => {
@@ -38,7 +36,7 @@ export function testRuntime<R>(self: Layer<T.DefaultEnv, never, R>): TestRuntime
     if (res._tag === "Failure") {
       console.log(C.pretty(res.cause))
 
-      throw new FiberFailure(res.cause)
+      throw new C.FiberFailure(res.cause)
     }
   })
 
@@ -46,18 +44,18 @@ export function testRuntime<R>(self: Layer<T.DefaultEnv, never, R>): TestRuntime
     const rm = relMap.get
     if (rm) {
       const res = await T.runPromiseExit(
-        releaseAll(Ex.succeed(undefined), T.sequential)(rm)
+        M.releaseAll(Ex.succeed(undefined), T.sequential)(rm)
       )
       if (res._tag === "Failure") {
         console.log(C.pretty(res.cause))
 
-        throw new FiberFailure(res.cause)
+        throw new C.FiberFailure(res.cause)
       }
     }
   })
 
   return {
-    runPromise: <E, A>(self: T.Effect<R & DefaultEnv, E, A>) =>
+    runPromise: <E, A>(self: T.Effect<R & T.DefaultEnv, E, A>) =>
       T.runPromise(
         T.suspend(() =>
           pipe(env.get, (e) =>
@@ -65,7 +63,7 @@ export function testRuntime<R>(self: Layer<T.DefaultEnv, never, R>): TestRuntime
           )
         )
       ),
-    runPromiseExit: <E, A>(self: T.Effect<R & DefaultEnv, E, A>) =>
+    runPromiseExit: <E, A>(self: T.Effect<R & T.DefaultEnv, E, A>) =>
       T.runPromiseExit(
         T.suspend(() =>
           pipe(env.get, (e) =>
