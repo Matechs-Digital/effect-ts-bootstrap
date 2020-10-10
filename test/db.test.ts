@@ -2,9 +2,12 @@ import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
+import * as Lens from "@effect-ts/monocle/Lens"
 
+import { createUser } from "../src/api/user"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
+import { CreateUser, User } from "../src/model/user"
 import { TestContainersLive } from "./utils/containers"
 import { PgConfigTest } from "./utils/db"
 import { Migrations, TestMigration } from "./utils/migration"
@@ -113,6 +116,18 @@ describe("Live Db", () => {
           table_name: "posts"
         }
       ])
+    )
+  })
+
+  it("creates a new user", async () => {
+    const result = await pipe(
+      createUser(CreateUser.build({ name: "Michael" })),
+      PgClient.provide,
+      runtime.runPromiseExit
+    )
+
+    expect(pipe(result, Ex.map(pipe(User.lens, Lens.props("name", "id")).get))).toEqual(
+      Ex.succeed({ id: 1, name: "Michael" })
     )
   })
 })

@@ -278,6 +278,21 @@
   dependencies:
     "@effect-ts/system" "^0.1.13"
 
+"@effect-ts/monocle@^0.2.12":
+  version "0.2.12"
+  resolved "https://registry.yarnpkg.com/@effect-ts/monocle/-/monocle-0.2.12.tgz#98d519e3e811a4f4ac85748b1f2bca08f77d3565"
+  integrity sha512-4jDLdqF239p3pbF61FGMNH6D+jJcOHQQqR5gauep2fJa0S7+zM4F4FsaPVz+1N7/2zVBoMYZ1NPk03xMWAkwnw==
+  dependencies:
+    "@effect-ts/core" "^0.3.12"
+
+"@effect-ts/morphic@^0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@effect-ts/morphic/-/morphic-0.1.19.tgz#5de6e09b1540c41e9d47d8a9856ad053a57e79e8"
+  integrity sha512-E4Yy8OqNmJmJVWpRFHdPoSb70ei0lSxu3JFyKbDt6bER4d5bwimjDiDLCrCePPzccrKcVbnnL+jWppDaHdZa8Q==
+  dependencies:
+    "@effect-ts/core" "^0.3.12"
+    "@effect-ts/monocle" "^0.2.12"
+
 "@effect-ts/system@^0.1.13":
   version "0.1.13"
   resolved "https://registry.yarnpkg.com/@effect-ts/system/-/system-0.1.13.tgz#8e1fe5b4e59d10ad0cf7a3c784d2b9ca0707a41e"
@@ -1961,6 +1976,13 @@ extsprintf@^1.2.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.4.0.tgz#e2689f8f356fad62cca65a3a91c5df5f9551692f"
   integrity sha1-4mifjzVvrWLMplo6kcXfX5VRaS8=
+
+fast-check@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/fast-check/-/fast-check-2.4.0.tgz#8142ad724103e378f3afefeeb165c5dd6a9b2949"
+  integrity sha512-28SiCkMSkCq5x3vOjCkwqsJRL3rUAdAvp9vjslDbCf25Ej1HaZBgRrgW1/a31m2LMlG9lM4jsTc7xy5xuCu8Jg==
+  dependencies:
+    pure-rand "^3.0.0"
 
 fast-deep-equal@^3.1.1:
   version "3.1.3"
@@ -3900,6 +3922,11 @@ punycode@^2.1.0, punycode@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
+
+pure-rand@^3.0.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-3.1.0.tgz#646b812635cbac86105c46b0b03aa5dac1c759b3"
+  integrity sha512-xkCSMNjEnLG/A8iTH9M5ayXN4SCWRP+ih3rxi09Q7Fu0b9jAP6V9H59pOtcB37IsVt3eHxf1FMy9n7YrqdDdSA==
 
 qs@~6.5.2:
   version "6.5.2"
