@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node -r ts-node/register src/index.ts",
     "test": "jest",
-    "migrate": "node-pg-migrate"
+    "migration:create": "node-pg-migrate create"
   },
   "dependencies": {
     "@effect-ts/core": "^0.3.12",
