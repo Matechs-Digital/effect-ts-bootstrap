@@ -9,8 +9,8 @@ import { testRuntime } from "./utils/runtime"
 
 const runtime = pipe(PG.Live, L.using(TestContainerPg), testRuntime)
 
-describe("DockerComposeEnvironment", () => {
-  it("reads config", async () => {
+describe("Live Db", () => {
+  it("run simple query", async () => {
     const response = await pipe(
       PG.withClientM((client) =>
         pipe(
