@@ -27,6 +27,7 @@ describe("Live Db", () => {
       )
     ).toEqual(1)
   })
+
   it("run simple query", async () => {
     const response = await pipe(
       PgClient.accessM((client) =>
@@ -40,5 +41,78 @@ describe("Live Db", () => {
     )
 
     expect(response).toEqual(Ex.succeed("Michael"))
+  })
+
+  it("check users table structure", async () => {
+    const response = await pipe(
+      PgClient.accessM((client) =>
+        pipe(
+          T.fromPromiseDie(() =>
+            client.query(
+              "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
+              ["users"]
+            )
+          ),
+          T.map((_) => _.rows)
+        )
+      ),
+      PgClient.provide,
+      runtime.runPromiseExit
+    )
+
+    expect(response).toEqual(
+      Ex.succeed([
+        { table_name: "users", column_name: "id", data_type: "integer" },
+        {
+          table_name: "users",
+          column_name: "name",
+          data_type: "character varying"
+        },
+        {
+          table_name: "users",
+          column_name: "createdAt",
+          data_type: "timestamp without time zone"
+        }
+      ])
+    )
+  })
+
+  it("check posts table structure", async () => {
+    const response = await pipe(
+      PgClient.accessM((client) =>
+        pipe(
+          T.fromPromiseDie(() =>
+            client.query(
+              "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
+              ["posts"]
+            )
+          ),
+          T.map((_) => _.rows)
+        )
+      ),
+      PgClient.provide,
+      runtime.runPromiseExit
+    )
+
+    expect(response).toEqual(
+      Ex.succeed([
+        { table_name: "posts", column_name: "id", data_type: "integer" },
+        {
+          table_name: "posts",
+          column_name: "userId",
+          data_type: "integer"
+        },
+        {
+          table_name: "posts",
+          column_name: "body",
+          data_type: "text"
+        },
+        {
+          column_name: "createdAt",
+          data_type: "timestamp without time zone",
+          table_name: "posts"
+        }
+      ])
+    )
   })
 })
