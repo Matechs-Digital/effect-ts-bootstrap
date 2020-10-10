@@ -9,9 +9,9 @@
     "migration:create": "node-pg-migrate create"
   },
   "dependencies": {
-    "@effect-ts/core": "^0.3.12",
-    "@effect-ts/monocle": "^0.2.12",
-    "@effect-ts/morphic": "^0.1.19",
+    "@effect-ts/core": "^0.3.13",
+    "@effect-ts/monocle": "^0.2.13",
+    "@effect-ts/morphic": "^0.1.20",
     "@types/async-redis": "^1.1.1",
     "@types/jest": "^26.0.10",
     "@types/node": "^14.11.8",

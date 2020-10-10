@@ -8,8 +8,8 @@ import * as fc from "fast-check"
 
 import { createUser, Live as UserPersistenceLive } from "../src/api/user"
 import * as PgClient from "../src/db/PgClient"
-import { PgMigrations } from "../src/db/PgMigrations"
 import * as PgPool from "../src/db/PgPool"
+import { restrictToPublic } from "../src/entry/restrictToPublic"
 import { CreateUser, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import { TestContainersLive } from "./utils/containers"
@@ -19,24 +19,16 @@ import { testRuntime } from "./utils/runtime"
 
 describe("Integration Suite", () => {
   const runtime = pipe(
-    L.all(UserPersistenceLive),
+    L.allPar(UserPersistenceLive),
     L.using(TestMigrations),
     L.using(PgPool.Live),
     L.using(PgConfigTest("integration")),
     L.using(TestContainersLive("integration")),
+    restrictToPublic,
     testRuntime
   )
 
   describe("Bootstrap", () => {
-    it("migrations are being applied", async () => {
-      expect(
-        await pipe(
-          T.accessService(PgMigrations)((_) => _.migrations.length),
-          runtime.runPromise
-        )
-      ).toEqual(1)
-    })
-
     it("run simple query", async () => {
       const response = await pipe(
         PgClient.accessM((client) =>
