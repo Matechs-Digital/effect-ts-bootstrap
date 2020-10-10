@@ -4,10 +4,16 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
 import * as PG from "../src/db/client"
-import { TestContainerPg } from "./utils/db"
+import { TestContainersLive } from "./utils/containers"
+import { PgConfigTest } from "./utils/db"
 import { testRuntime } from "./utils/runtime"
 
-const runtime = pipe(PG.Live, L.using(TestContainerPg), testRuntime)
+const runtime = pipe(
+  PG.Live,
+  L.using(PgConfigTest),
+  L.using(TestContainersLive),
+  testRuntime
+)
 
 describe("Live Db", () => {
   it("run simple query", async () => {
