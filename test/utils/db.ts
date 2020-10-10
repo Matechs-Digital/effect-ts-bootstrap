@@ -1,9 +1,10 @@
 import * as L from "@effect-ts/core/Effect/Layer"
 
 import { PgConfig } from "../../src/db/PgConfig"
+import type { Environments } from "./containers"
 import { TestContainers } from "./containers"
 
-function makeConfig({ env }: TestContainers): PgConfig {
+function makeConfig<K extends Environments>({ env }: TestContainers<K>): PgConfig {
   const container = env.getContainer("postgres_1")
 
   const port = container.getMappedPort(5432)
@@ -20,4 +21,5 @@ function makeConfig({ env }: TestContainers): PgConfig {
   }
 }
 
-export const PgConfigTest = L.fromConstructor(PgConfig)(makeConfig)(TestContainers)
+export const PgConfigTest = <K extends Environments>(_name: K) =>
+  L.fromConstructor(PgConfig)(makeConfig)(TestContainers(_name))

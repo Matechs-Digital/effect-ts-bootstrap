@@ -6,23 +6,32 @@ import * as path from "path"
 import type { StartedDockerComposeEnvironment } from "testcontainers"
 import { DockerComposeEnvironment } from "testcontainers"
 
-export interface TestContainers {
+export const ref = {
+  integration: Symbol()
+}
+
+export type Environments = keyof typeof ref
+
+export interface TestContainers<K extends Environments> {
+  name: K
   env: StartedDockerComposeEnvironment
 }
 
-export const TestContainers = has<TestContainers>()
+export const TestContainers = <K extends Environments>(_name: K) =>
+  has<TestContainers<K>>().setKey(ref[_name])
 
-export const TestContainersLive = L.create(TestContainers)
-  .prepare(
-    T.fromPromiseDie(async () => {
-      const composeFilePath = path.resolve(__dirname, "../../")
-      const composeFile = "docker-compose.yaml"
+export const TestContainersLive = <K extends Environments>(_name: K) =>
+  L.create(TestContainers(_name))
+    .prepare(
+      T.fromPromiseDie(async () => {
+        const composeFilePath = path.resolve(__dirname, "../../environments")
+        const composeFile = `${_name}.yaml`
 
-      const env = await new DockerComposeEnvironment(composeFilePath, composeFile)
-        .withStartupTimeout(new Duration(60, TemporalUnit.SECONDS))
-        .up()
+        const env = await new DockerComposeEnvironment(composeFilePath, composeFile)
+          .withStartupTimeout(new Duration(60, TemporalUnit.SECONDS))
+          .up()
 
-      return { env }
-    })
-  )
-  .release(({ env }) => T.fromPromiseDie(() => env.down()))
+        return { env, name: _name }
+      })
+    )
+    .release(({ env }) => T.fromPromiseDie(() => env.down()))

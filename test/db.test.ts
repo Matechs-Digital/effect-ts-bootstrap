@@ -22,8 +22,8 @@ describe("Integration Suite", () => {
     L.all(UserPersistenceLive),
     L.using(TestMigrations),
     L.using(PgPool.Live),
-    L.using(PgConfigTest),
-    L.using(TestContainersLive),
+    L.using(PgConfigTest("integration")),
+    L.using(TestContainersLive("integration")),
     testRuntime
   )
 
