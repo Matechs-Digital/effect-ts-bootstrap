@@ -31,7 +31,7 @@ const CreateUser_ = make((F) =>
                     {
                       actual: s,
                       id: userErrorIds.user_name_length,
-                      name: "user_name",
+                      name: "name",
                       message: "name should be between 0 and 255 characters long"
                     }
                   ])
