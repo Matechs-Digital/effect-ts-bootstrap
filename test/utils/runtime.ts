@@ -1,6 +1,7 @@
 import type { DefaultEnv } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import * as C from "@effect-ts/core/Effect/Cause"
+import { FiberFailure } from "@effect-ts/core/Effect/Cause"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import type { Layer } from "@effect-ts/core/Effect/Layer"
 import type { ReleaseMap } from "@effect-ts/core/Effect/Managed"
@@ -36,13 +37,22 @@ export function testRuntime<R>(self: Layer<T.DefaultEnv, never, R>): TestRuntime
 
     if (res._tag === "Failure") {
       console.log(C.pretty(res.cause))
+
+      throw new FiberFailure(res.cause)
     }
   })
 
   afterAll(async () => {
     const rm = relMap.get
     if (rm) {
-      await T.runPromise(releaseAll(Ex.succeed(undefined), T.sequential)(rm))
+      const res = await T.runPromiseExit(
+        releaseAll(Ex.succeed(undefined), T.sequential)(rm)
+      )
+      if (res._tag === "Failure") {
+        console.log(C.pretty(res.cause))
+
+        throw new FiberFailure(res.cause)
+      }
     }
   })
 
