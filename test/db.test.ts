@@ -11,7 +11,6 @@ import {
   Live as UserPersistenceLive,
   UserMigrations
 } from "../src/api/user"
-import { Migrations } from "../src/db/Migrations"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
 import { CreateUser, User } from "../src/model/user"
