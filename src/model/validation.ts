@@ -19,9 +19,10 @@ export function validation<E, A>(
       u,
       encode,
       S.chain(decode),
-      S.mapError(
-        (d) => new ValidationError(A.filterMap_(d.errors, collector).join(", "))
-      )
+      S.mapError((d) => {
+        const errors = A.filterMap_(d.errors, collector)
+        return new ValidationError(errors.length > 0 ? errors.join(", ") : "")
+      })
     )
 }
 
