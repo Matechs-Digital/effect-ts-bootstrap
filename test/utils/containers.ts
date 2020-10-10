@@ -22,7 +22,7 @@ export const TestContainersLive = L.create(TestContainers)
         .withStartupTimeout(new Duration(60, TemporalUnit.SECONDS))
         .up()
 
-      return <TestContainers>{ env }
+      return { env }
     })
   )
   .release(({ env }) => T.fromPromiseDie(() => env.down()))
