@@ -6,7 +6,7 @@ import * as PGM from "node-pg-migrate"
 import type * as MIG from "node-pg-migrate/dist/migration"
 import * as path from "path"
 
-import { PgClient } from "../../src/db/client"
+import { PgPool } from "../../src/db/PgPool"
 
 export interface Migrations {
   migrations: MIG.RunMigration[]
@@ -15,9 +15,9 @@ export interface Migrations {
 export const Migrations = has<Migrations>()
 
 export function migrateUpDown(n: number) {
-  return ({ withClientM }: PgClient) =>
+  return ({ withPoolClientM }: PgPool) =>
     M.makeExit_(
-      withClientM((dbClient) => {
+      withPoolClientM((dbClient) => {
         const opts: PGM.RunnerOption = {
           migrationsTable: "migration",
           dir: path.join(__dirname, "../../migrations"),
@@ -41,7 +41,7 @@ export function migrateUpDown(n: number) {
         })
       }),
       () =>
-        withClientM((dbClient) => {
+        withPoolClientM((dbClient) => {
           const opts: PGM.RunnerOption = {
             migrationsTable: "migration",
             dir: path.join(__dirname, "../../migrations"),
@@ -63,4 +63,4 @@ export function migrateUpDown(n: number) {
 }
 
 export const TestMigration = (n: number) =>
-  L.fromConstructorManaged(Migrations)(migrateUpDown(n))(PgClient)
+  L.fromConstructorManaged(Migrations)(migrateUpDown(n))(PgPool)

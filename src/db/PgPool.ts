@@ -7,32 +7,28 @@ import * as S from "@effect-ts/core/Effect/Schedule"
 import { pipe } from "@effect-ts/core/Function"
 import * as PG from "pg"
 
-export interface PgConfig {
-  config: PG.ClientConfig
-}
+import { withConfig } from "./PgConfig"
 
-export const PgConfig = has<PgConfig>()
-
-export const { config: withConfig } = T.deriveAccess(PgConfig)(["config"])
-
-export interface PgClient {
-  withClientM: <R, E, A>(
+export interface PgPool {
+  withPoolClientM: <R, E, A>(
     body: (_: PG.PoolClient) => T.Effect<R, E, A>
   ) => T.Effect<R & C.HasClock, E, A>
 }
 
-export const PgClient = has<PgClient>()
+export const PgPool = has<PgPool>()
 
-export function withClientM<R, E, A>(body: (_: PG.PoolClient) => T.Effect<R, E, A>) {
-  return T.accessServiceM(PgClient)((_) => _.withClientM(body))
+export function withPoolClientM<R, E, A>(
+  body: (_: PG.PoolClient) => T.Effect<R, E, A>
+) {
+  return T.accessServiceM(PgPool)((_) => _.withPoolClientM(body))
 }
 
 export const Live = pipe(
   withConfig((_) => new PG.Pool(_)),
   M.make((_) => T.fromPromiseDie(() => _.end())),
   M.map(
-    (pool): PgClient => ({
-      withClientM: (body) =>
+    (pool): PgPool => ({
+      withPoolClientM: (body) =>
         T.bracket_(
           T.orDie(
             T.retry_(
@@ -45,5 +41,5 @@ export const Live = pipe(
         )
     })
   ),
-  L.fromManaged(PgClient)
+  L.fromManaged(PgPool)
 )

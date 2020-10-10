@@ -3,7 +3,8 @@ import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
-import * as PG from "../src/db/client"
+import * as PgClient from "../src/db/PgClient"
+import * as PgPool from "../src/db/PgPool"
 import { TestContainersLive } from "./utils/containers"
 import { PgConfigTest } from "./utils/db"
 import { Migrations, TestMigration } from "./utils/migration"
@@ -11,7 +12,7 @@ import { testRuntime } from "./utils/runtime"
 
 const runtime = pipe(
   TestMigration(1),
-  L.using(PG.Live),
+  L.using(PgPool.Live),
   L.using(PgConfigTest),
   L.using(TestContainersLive),
   testRuntime
@@ -28,12 +29,13 @@ describe("Live Db", () => {
   })
   it("run simple query", async () => {
     const response = await pipe(
-      PG.withClientM((client) =>
+      PgClient.accessM((client) =>
         pipe(
           T.fromPromiseDie(() => client.query("SELECT $1::text as name", ["Michael"])),
           T.map((_): string => _.rows[0].name)
         )
       ),
+      PgClient.provide,
       runtime.runPromiseExit
     )
 

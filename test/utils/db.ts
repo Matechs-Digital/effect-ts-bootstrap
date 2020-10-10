@@ -1,6 +1,6 @@
 import * as L from "@effect-ts/core/Effect/Layer"
 
-import { PgConfig } from "../../src/db/client"
+import { PgConfig } from "../../src/db/PgConfig"
 import { TestContainers } from "./containers"
 
 const makeConfig = ({ env }: TestContainers): PgConfig => {
