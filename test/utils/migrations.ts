@@ -1,5 +1,4 @@
 import type { Tag } from "@effect-ts/core/Classic/Has"
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
@@ -60,7 +59,9 @@ export function migrateUpDown<Mig extends Migrations>(
     )
 }
 
-export const TestMigration = <Mig extends Migrations>(
+export function TestMigrations<Mig extends Migrations>(
   _: Tag<Mig>,
   f: (_: Migrations) => Mig
-) => (dir: string) => L.fromConstructorManaged(_)(migrateUpDown(_, f)(dir))(PgPool)
+) {
+  return (dir: string) => L.fromConstructorManaged(_)(migrateUpDown(_, f)(dir))(PgPool)
+}

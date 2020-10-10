@@ -18,14 +18,14 @@ import { CreateUser, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import { TestContainersLive } from "./utils/containers"
 import { PgConfigTest } from "./utils/db"
-import { TestMigration } from "./utils/migration"
+import { TestMigrations } from "./utils/migrations"
 import { testRuntime } from "./utils/runtime"
 
 describe("Integration Suite", () => {
   const runtime = pipe(
     L.all(UserPersistenceLive),
     L.using(
-      TestMigration(
+      TestMigrations(
         UserMigrations,
         (_): UserMigrations => ({
           _tag: "UserMigrations",
