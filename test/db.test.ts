@@ -163,9 +163,10 @@ describe("Integration Suite", () => {
           )
 
           expect(result._tag).toEqual("Success")
-        })
+        }),
+        { numRuns: 100 }
       )
-    }, 10_000)
+    })
 
     it("find users created from previous steps", async () => {
       const response = await pipe(
