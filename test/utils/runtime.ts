@@ -38,7 +38,7 @@ export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>): TestRunti
 
       throw new C.FiberFailure(res.cause)
     }
-  })
+  }, 60000)
 
   afterAll(async () => {
     const rm = relMap.get
@@ -52,7 +52,7 @@ export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>): TestRunti
         throw new C.FiberFailure(res.cause)
       }
     }
-  })
+  }, 60000)
 
   return {
     runPromise: <E, A>(self: T.Effect<R & T.DefaultEnv, E, A>) =>
