@@ -3,11 +3,13 @@ import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 import * as Lens from "@effect-ts/monocle/Lens"
+import { arbitrary } from "@effect-ts/morphic/FastCheck"
+import * as fc from "fast-check"
 
 import { createUser, Live as UserPersistenceLive } from "../src/api/user"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
-import { User } from "../src/model/user"
+import { CreateUser, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import { TestContainersLive } from "./utils/containers"
 import { PgConfigTest } from "./utils/db"
@@ -144,5 +146,34 @@ describe("Live Db", () => {
     expect(result).toEqual(
       Ex.fail(new ValidationError("name should be between 0 and 255 characters long"))
     )
+  })
+
+  it("create arbitrary users", async () => {
+    await fc.check(
+      fc.asyncProperty(arbitrary(CreateUser), async (_) => {
+        const result = await pipe(
+          createUser(_),
+          PgClient.provide,
+          runtime.runPromiseExit
+        )
+
+        expect(result._tag).toEqual("Success")
+      })
+    )
+  })
+
+  it("find users created from previous steps", async () => {
+    const response = await pipe(
+      PgClient.accessM((client) =>
+        pipe(
+          T.fromPromiseDie(() => client.query("SELECT COUNT(*) FROM users")),
+          T.map((_) => parseInt(_.rows[0].count))
+        )
+      ),
+      PgClient.provide,
+      runtime.runPromiseExit
+    )
+
+    expect(response).toEqual(Ex.succeed(101))
   })
 })

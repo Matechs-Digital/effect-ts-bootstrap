@@ -2,7 +2,7 @@ import * as O from "@effect-ts/core/Classic/Option"
 import * as S from "@effect-ts/core/Classic/Sync"
 import { flow } from "@effect-ts/core/Function"
 import type { AType, EType } from "@effect-ts/morphic"
-import { DecoderURI, make, opaque } from "@effect-ts/morphic"
+import { DecoderURI, FastCheckURI, make, opaque } from "@effect-ts/morphic"
 import type { DecodingError } from "@effect-ts/morphic/Decoder/common"
 import { fail } from "@effect-ts/morphic/Decoder/common"
 import { encoder } from "@effect-ts/morphic/Encoder"
@@ -19,6 +19,8 @@ const CreateUser_ = make((F) =>
   F.interface({
     name: F.string({
       conf: {
+        [FastCheckURI]: (_, { module: fc }) =>
+          fc.string({ minLength: 1, maxLength: 255 }),
         [DecoderURI]: (_) => ({
           decode: flow(
             _.decode,
