@@ -11,7 +11,7 @@ import { strictDecoder } from "@effect-ts/morphic/StrictDecoder"
 import { Common } from "./common"
 import { validation } from "./validation"
 
-const ids = {
+export const userErrorIds = {
   user_name_length: "user_name_length"
 }
 
@@ -30,7 +30,7 @@ const CreateUser_ = make((F) =>
                 : fail([
                     {
                       actual: s,
-                      id: ids.user_name_length,
+                      id: userErrorIds.user_name_length,
                       name: "user_name",
                       message: "name should be between 0 and 255 characters long"
                     }
@@ -59,7 +59,7 @@ export const decodeUser = strictDecoder(User).decode
 export const encodeUser = encoder(User).encode
 
 export const userErrors = (_: DecodingError) =>
-  _.id != null && _.id in ids && _.message != null && _.message.length > 0
+  _.id != null && _.id in userErrorIds && _.message != null && _.message.length > 0
     ? O.some(_.message)
     : O.none
 
