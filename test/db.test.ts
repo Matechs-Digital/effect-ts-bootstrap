@@ -8,6 +8,7 @@ import { createUser, Live as UserPersistenceLive } from "../src/api/user"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
 import { User } from "../src/model/user"
+import { ValidationError } from "../src/model/validation"
 import { TestContainersLive } from "./utils/containers"
 import { PgConfigTest } from "./utils/db"
 import { Migrations, TestMigration } from "./utils/migration"
@@ -130,6 +131,18 @@ describe("Live Db", () => {
 
     expect(pipe(result, Ex.map(nameAndId.get))).toEqual(
       Ex.succeed({ id: 1, name: "Michael" })
+    )
+  })
+
+  it("fail to create a new user with an ampty name", async () => {
+    const result = await pipe(
+      createUser({ name: "" }),
+      PgClient.provide,
+      runtime.runPromiseExit
+    )
+
+    expect(result).toEqual(
+      Ex.fail(new ValidationError("name should be between 0 and 255 characters long"))
     )
   })
 })
