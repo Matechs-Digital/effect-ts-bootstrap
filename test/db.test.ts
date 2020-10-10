@@ -14,8 +14,8 @@ describe("Live Db", () => {
     const response = await pipe(
       PG.withClientM((client) =>
         pipe(
-          T.fromPromise(() => client.query("SELECT $1::text as name", ["Michael"])),
-          T.map((_) => _.rows[0].name)
+          T.fromPromiseDie(() => client.query("SELECT $1::text as name", ["Michael"])),
+          T.map((_): string => _.rows[0].name)
         )
       ),
       runtime.runPromiseExit
