@@ -121,12 +121,14 @@ describe("Live Db", () => {
 
   it("creates a new user", async () => {
     const result = await pipe(
-      createUser(CreateUser.build({ name: "Michael" })),
+      createUser({ name: "Michael" }),
       PgClient.provide,
       runtime.runPromiseExit
     )
 
-    expect(pipe(result, Ex.map(pipe(User.lens, Lens.props("name", "id")).get))).toEqual(
+    const nameAndId = pipe(User.lens, Lens.props("name", "id"))
+
+    expect(pipe(result, Ex.map(nameAndId.get))).toEqual(
       Ex.succeed({ id: 1, name: "Michael" })
     )
   })
