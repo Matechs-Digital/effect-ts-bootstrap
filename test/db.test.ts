@@ -18,7 +18,7 @@ import { testRuntime } from "./utils/runtime"
 
 describe("Integration Suite", () => {
   const runtime = pipe(
-    L.all(TestMigration(1), UserPersistenceLive),
+    L.all(TestMigration, UserPersistenceLive),
     L.using(PgPool.Live),
     L.using(PgConfigTest),
     L.using(TestContainersLive),
