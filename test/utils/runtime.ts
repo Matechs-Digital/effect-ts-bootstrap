@@ -9,7 +9,12 @@ import { releaseAll } from "@effect-ts/core/Effect/Managed"
 import { pipe, tuple } from "@effect-ts/core/Function"
 import { AtomicReference } from "@effect-ts/system/Support/AtomicReference"
 
-export function testRuntime<R>(self: Layer<T.DefaultEnv, never, R>) {
+export interface TestRuntime<R> {
+  runPromise: <E, A>(self: T.Effect<R & DefaultEnv, E, A>) => Promise<A>
+  runPromiseExit: <E, A>(self: T.Effect<R & DefaultEnv, E, A>) => Promise<Ex.Exit<E, A>>
+}
+
+export function testRuntime<R>(self: Layer<T.DefaultEnv, never, R>): TestRuntime<R> {
   const env = new AtomicReference<R | undefined>(undefined)
   const relMap = new AtomicReference<ReleaseMap | undefined>(undefined)
 
