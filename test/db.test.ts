@@ -6,10 +6,12 @@ import { pipe } from "@effect-ts/core/Function"
 import * as PG from "../src/db/client"
 import { TestContainersLive } from "./utils/containers"
 import { PgConfigTest } from "./utils/db"
+import { TestMigration } from "./utils/migration"
 import { testRuntime } from "./utils/runtime"
 
 const runtime = pipe(
-  PG.Live,
+  TestMigration(1),
+  L.using(PG.Live),
   L.using(PgConfigTest),
   L.using(TestContainersLive),
   testRuntime

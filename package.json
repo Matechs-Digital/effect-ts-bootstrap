@@ -5,7 +5,8 @@
   "author": "Michael Arnaldi",
   "scripts": {
     "start": "node -r ts-node/register src/index.ts",
-    "test": "jest"
+    "test": "jest",
+    "migrate": "node-pg-migrate"
   },
   "dependencies": {
     "@effect-ts/core": "^0.3.12",
@@ -25,6 +26,7 @@
     "eslint-plugin-simple-import-sort": "^5.0.3",
     "eslint-plugin-sort-destructure-keys": "^1.3.5",
     "jest": "^26.4.1",
+    "node-pg-migrate": "^5.8.0",
     "pg": "^8.4.1",
     "prettier": "^2.1.2",
     "reflect-metadata": "^0.1.13",
