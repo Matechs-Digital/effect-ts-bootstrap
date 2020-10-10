@@ -32,7 +32,7 @@ export const Live = pipe(
   M.make((_) => T.fromPromiseDie(() => _.end())),
   M.map(
     (pool): PgClient => ({
-      withClientM: <R, E, A>(body: (_: PG.PoolClient) => T.Effect<R, E, A>) =>
+      withClientM: (body) =>
         T.bracket_(
           T.orDie(
             T.retry_(
