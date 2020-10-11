@@ -7,6 +7,7 @@ import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import * as fc from "fast-check"
 
 import { createUser, Live as UserPersistenceLive } from "../src/api/user"
+import { provideDbFromPool } from "../src/db/Db"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
 import { restrictToPublic } from "../src/entry/restrictToPublic"
@@ -124,7 +125,7 @@ describe("Integration Suite", () => {
     it("creates a new user", async () => {
       const result = await pipe(
         createUser({ name: "Michael" }),
-        PgClient.provide,
+        provideDbFromPool,
         runPromiseExit
       )
 
@@ -138,7 +139,7 @@ describe("Integration Suite", () => {
     it("fail to create a new user with an ampty name", async () => {
       const result = await pipe(
         createUser({ name: "" }),
-        PgClient.provide,
+        provideDbFromPool,
         runPromiseExit
       )
 
@@ -150,7 +151,7 @@ describe("Integration Suite", () => {
     it("create arbitrary users", async () => {
       await fc.check(
         fc.asyncProperty(arbitrary(CreateUser), async (_) => {
-          const result = await pipe(createUser(_), PgClient.provide, runPromiseExit)
+          const result = await pipe(createUser(_), provideDbFromPool, runPromiseExit)
 
           expect(result._tag).toEqual("Success")
         }),
