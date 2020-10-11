@@ -285,10 +285,10 @@
   dependencies:
     "@effect-ts/core" "^0.3.13"
 
-"@effect-ts/morphic@^0.1.20":
-  version "0.1.20"
-  resolved "https://registry.yarnpkg.com/@effect-ts/morphic/-/morphic-0.1.20.tgz#14a010372b2b1f7a1e7b1a5042222bd1603119d6"
-  integrity sha512-OaFkbodXzZQOak+nqdXcOjpVkq+wjCcHzJhVKnHQqiE0XNo93fVOngMyq+dCAbouGN/j0N6lJWLdcE2qk86prw==
+"@effect-ts/morphic@^0.1.21":
+  version "0.1.21"
+  resolved "https://registry.yarnpkg.com/@effect-ts/morphic/-/morphic-0.1.21.tgz#bc9d19301c56d33bf08d1470d30dba643e7d6efa"
+  integrity sha512-qQsproUgiGpVQzvtMvzHDeFnkV6DVAqc6T2LN180xvnmQ6cXhMGcVpCJD4N9ZGl4u99kcM5A7L6Dx38ktXiwOw==
   dependencies:
     "@effect-ts/core" "^0.3.13"
     "@effect-ts/monocle" "^0.2.13"

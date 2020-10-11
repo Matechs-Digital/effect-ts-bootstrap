@@ -24,11 +24,6 @@ import { PgConfigTest } from "./utils/db"
 import { TestMigrations } from "./utils/migrations"
 import { testRuntime } from "./utils/runtime"
 
-// @ts-expect-error
-BigInt.prototype.toJSON = function () {
-  return `${this.toString()}`
-}
-
 describe("Integration Suite", () => {
   const { runPromiseExit } = pipe(
     L.allPar(UserPersistenceLive),

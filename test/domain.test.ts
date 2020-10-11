@@ -2,7 +2,7 @@ import { left, right } from "@effect-ts/core/Classic/Either"
 import * as T from "@effect-ts/core/Classic/Sync"
 import { DecodeError } from "@effect-ts/morphic/Decoder/common"
 
-import { decodeId, encodeId } from "../src/model/common"
+import { decodeId } from "../src/model/common"
 import { decodeUser } from "../src/model/user"
 
 it("decodes user", () => {
