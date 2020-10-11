@@ -11,6 +11,7 @@ export interface TestRuntime<R> {
   runPromiseExit: <E, A>(
     self: T.Effect<R & T.DefaultEnv, E, A>
   ) => Promise<Ex.Exit<E, A>>
+  provide: <R2, E, A>(self: T.Effect<R & R2, E, A>) => T.Effect<R2, E, A>
 }
 
 export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>): TestRuntime<R> {
@@ -55,7 +56,7 @@ export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>): TestRunti
   }, 120_000)
 
   return {
-    runPromise: <E, A>(self: T.Effect<R & T.DefaultEnv, E, A>) =>
+    runPromise: (self) =>
       T.runPromise(
         T.suspend(() =>
           pipe(env.get, (e) =>
@@ -63,13 +64,17 @@ export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>): TestRunti
           )
         )
       ),
-    runPromiseExit: <E, A>(self: T.Effect<R & T.DefaultEnv, E, A>) =>
+    runPromiseExit: (self) =>
       T.runPromiseExit(
         T.suspend(() =>
           pipe(env.get, (e) =>
             e != null ? T.provide_(self, e) : T.die("environment not ready")
           )
         )
+      ),
+    provide: (self) =>
+      pipe(env.get, (e) =>
+        e != null ? T.provide_(self, e) : T.die("environment not ready")
       )
   }
 }
