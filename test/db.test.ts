@@ -150,8 +150,8 @@ describe("Integration Suite", () => {
       )
     })
 
-    it("create arbitrary users", async () => {
-      await fc.assert(
+    it("create arbitrary users", () =>
+      fc.assert(
         fc.asyncProperty(arbitrary(CreateUser), async (_) => {
           const result = await runPromiseExit(
             pipe(createUser(_), T.as(true), Db.fromPool)
@@ -160,8 +160,7 @@ describe("Integration Suite", () => {
           expect(result).toEqual(Ex.succeed(true))
         }),
         { endOnFailure: true, timeout: 1000 }
-      )
-    })
+      ))
 
     it("find users created from previous steps", async () => {
       const response = await runPromiseExit(
