@@ -21,7 +21,7 @@ import { testRuntime } from "./utils/runtime"
 
 // @ts-expect-error
 BigInt.prototype.toJSON = function () {
-  return `${this.toString()}n`
+  return `${this.toString()}`
 }
 
 describe("Integration Suite", () => {
