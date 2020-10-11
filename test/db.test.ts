@@ -174,7 +174,7 @@ describe("Integration Suite", () => {
       expect(response).toEqual(Ex.succeed(101))
     })
 
-    it("should handle rollbacks", async () => {
+    it("transactional dsl handles success/failure with commit/rollback", async () => {
       const result = await pipe(
         T.tuple(
           createUser({ name: "USER_0" }),
