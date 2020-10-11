@@ -11,7 +11,7 @@ import { withPoolClientM } from "./PgPool"
 export type Supported = number | string | Newtype<any, Supported> | null | undefined
 
 export class LiveDb {
-  constructor(readonly client: Pg.PgClient["client"]) {}
+  constructor(private readonly client: Pg.PgClient["client"]) {}
 
   query(queryString: string, ...args: Supported[]) {
     return T.fromPromiseDie(
