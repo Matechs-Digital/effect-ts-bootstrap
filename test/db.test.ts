@@ -4,6 +4,7 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
+import { AssertionError } from "assert"
 import * as fc from "fast-check"
 
 import { createUser, Live as UserPersistenceLive } from "../src/api/user"
@@ -13,6 +14,7 @@ import * as PgPool from "../src/db/PgPool"
 import { restrictToPublic } from "../src/entry/restrictToPublic"
 import { CreateUser, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
+import { assertSuccess } from "./utils/assertions"
 import { TestContainersLive } from "./utils/containers"
 import { PgConfigTest } from "./utils/db"
 import { TestMigrations } from "./utils/migrations"
@@ -104,26 +106,26 @@ describe("Integration Suite", () => {
         )
       )
 
-      expect(response).toEqual(
-        Ex.succeed([
-          { table_name: "posts", column_name: "id", data_type: "integer" },
-          {
-            table_name: "posts",
-            column_name: "userId",
-            data_type: "integer"
-          },
-          {
-            table_name: "posts",
-            column_name: "body",
-            data_type: "text"
-          },
-          {
-            column_name: "createdAt",
-            data_type: "timestamp without time zone",
-            table_name: "posts"
-          }
-        ])
-      )
+      assertSuccess(response)
+
+      expect(response.value).toEqual([
+        { table_name: "posts", column_name: "id", data_type: "integer" },
+        {
+          table_name: "posts",
+          column_name: "userId",
+          data_type: "integer"
+        },
+        {
+          table_name: "posts",
+          column_name: "body",
+          data_type: "text"
+        },
+        {
+          column_name: "createdAt",
+          data_type: "timestamp without time zone",
+          table_name: "posts"
+        }
+      ])
     })
   })
 
@@ -172,8 +174,8 @@ describe("Integration Suite", () => {
         )
       )
 
-      expect(response._tag).toEqual("Success")
-      expect(response._tag === "Success" ? response.value : 0).toBeGreaterThan(10)
+      assertSuccess(response)
+      expect(response.value).toBeGreaterThan(10)
     })
 
     it("transactional dsl handles success/failure with commit/rollback", async () => {
@@ -221,7 +223,8 @@ describe("Integration Suite", () => {
         )
       )
 
-      expect(resultSuccess).toEqual(Ex.succeed(3))
+      assertSuccess(resultSuccess)
+      expect(resultSuccess.value).toEqual(3)
 
       const countSuccess = await runPromiseExit(
         pipe(
@@ -237,7 +240,8 @@ describe("Integration Suite", () => {
         )
       )
 
-      expect(countSuccess).toEqual(Ex.succeed(3))
+      assertSuccess(countSuccess)
+      expect(countSuccess.value).toEqual(3)
     })
   })
 })
