@@ -8,7 +8,7 @@ import { fail } from "@effect-ts/morphic/Decoder/common"
 import { encoder } from "@effect-ts/morphic/Encoder"
 import { strictDecoder } from "@effect-ts/morphic/StrictDecoder"
 
-import { Common, commonErrorIds } from "./common"
+import { Common, commonErrorIds, Id } from "./common"
 import { validation } from "./validation"
 
 export const userErrorIds = {
@@ -49,7 +49,7 @@ export interface CreateUserRaw extends EType<typeof CreateUser_> {}
 
 export const CreateUser = opaque<CreateUserRaw, CreateUser>()(CreateUser_)
 
-const User_ = make((F) => F.intersection([CreateUser(F), Common(F)]))
+const User_ = make((F) => F.intersection([Id(F), CreateUser(F), Common(F)]))
 
 export interface User extends AType<typeof User_> {}
 export interface UserRaw extends EType<typeof User_> {}

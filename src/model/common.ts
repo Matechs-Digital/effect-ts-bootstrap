@@ -55,7 +55,6 @@ export const validateId = validation(Id, commonErrors)
 
 const Common_ = make((F) =>
   F.interface({
-    id: F.bigint(),
     createdAt: F.date({
       conf: {
         [DecoderURI]: (_) => ({
