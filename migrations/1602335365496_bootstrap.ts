@@ -5,7 +5,7 @@ export const shorthands = undefined
 export function up(pgm: P.MigrationBuilder) {
   pgm.createTable("users", {
     id: {
-      type: "SERIAL",
+      type: "BIGSERIAL",
       notNull: true,
       primaryKey: true
     },
@@ -19,12 +19,12 @@ export function up(pgm: P.MigrationBuilder) {
 
   pgm.createTable("posts", {
     id: {
-      type: "SERIAL",
+      type: "BIGSERIAL",
       notNull: true,
       primaryKey: true
     },
     userId: {
-      type: "SERIAL",
+      type: "BIGSERIAL",
       notNull: true,
       references: '"users"',
       onDelete: "CASCADE"

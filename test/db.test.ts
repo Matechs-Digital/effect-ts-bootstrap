@@ -72,7 +72,7 @@ describe("Integration Suite", () => {
 
       expect(response).toEqual(
         Ex.succeed([
-          { table_name: "users", column_name: "id", data_type: "integer" },
+          { table_name: "users", column_name: "id", data_type: "bigint" },
           {
             table_name: "users",
             column_name: "name",
@@ -108,11 +108,11 @@ describe("Integration Suite", () => {
       assertSuccess(response)
 
       expect(response.value).toEqual([
-        { table_name: "posts", column_name: "id", data_type: "integer" },
+        { table_name: "posts", column_name: "id", data_type: "bigint" },
         {
           table_name: "posts",
           column_name: "userId",
-          data_type: "integer"
+          data_type: "bigint"
         },
         {
           table_name: "posts",
@@ -137,7 +137,7 @@ describe("Integration Suite", () => {
       const nameAndId = pipe(User.lens, Lens.props("name", "id"))
 
       expect(pipe(result, Ex.map(nameAndId.get))).toEqual(
-        Ex.succeed({ id: 1, name: "Michael" })
+        Ex.succeed({ id: BigInt(1), name: "Michael" })
       )
     })
 

@@ -4,7 +4,7 @@ import { DecoderURI, make, opaque } from "@effect-ts/morphic"
 
 const Common_ = make((F) =>
   F.interface({
-    id: F.number(),
+    id: F.bigint(),
     createdAt: F.date({
       conf: {
         [DecoderURI]: (_) => ({

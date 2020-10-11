@@ -8,14 +8,14 @@ it("decodes user", () => {
     T.runEither(
       decodeUser({
         createdAt: "2020-10-10T14:50:17.184Z",
-        id: 1,
+        id: "1",
         name: "Michael"
       })
     )
   ).toEqual(
     right({
       createdAt: new Date("2020-10-10T14:50:17.184Z"),
-      id: 1,
+      id: BigInt(1),
       name: "Michael"
     })
   )
