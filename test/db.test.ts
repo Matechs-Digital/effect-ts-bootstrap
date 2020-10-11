@@ -19,6 +19,11 @@ import { PgConfigTest } from "./utils/db"
 import { TestMigrations } from "./utils/migrations"
 import { testRuntime } from "./utils/runtime"
 
+// @ts-expect-error
+BigInt.prototype.toJSON = function () {
+  return `${this.toString()}n`
+}
+
 describe("Integration Suite", () => {
   const { runPromiseExit } = pipe(
     L.allPar(UserPersistenceLive),
@@ -217,14 +222,17 @@ describe("Integration Suite", () => {
             createUser({ name: "USER_1" }),
             createUser({ name: "USER_2" })
           ),
-          T.map((_) => _.length),
           Db.transaction,
           Db.fromPool
         )
       )
 
       assertSuccess(resultSuccess)
-      expect(resultSuccess.value).toEqual(3)
+      expect(resultSuccess.value.map((_) => [_.name, _.id])).toEqual([
+        ["USER_0", BigInt(105)],
+        ["USER_1", BigInt(106)],
+        ["USER_2", BigInt(107)]
+      ])
 
       const countSuccess = await runPromiseExit(
         pipe(
