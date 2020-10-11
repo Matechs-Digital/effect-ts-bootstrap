@@ -18,7 +18,7 @@ import { TestMigrations } from "./utils/migrations"
 import { testRuntime } from "./utils/runtime"
 
 describe("Integration Suite", () => {
-  const runtime = pipe(
+  const { runPromiseExit } = pipe(
     L.allPar(UserPersistenceLive),
     L.using(TestMigrations),
     L.using(PgPool.Live),
@@ -40,7 +40,7 @@ describe("Integration Suite", () => {
           )
         ),
         PgClient.provide,
-        runtime.runPromiseExit
+        runPromiseExit
       )
 
       expect(response).toEqual(Ex.succeed("Michael"))
@@ -60,7 +60,7 @@ describe("Integration Suite", () => {
           )
         ),
         PgClient.provide,
-        runtime.runPromiseExit
+        runPromiseExit
       )
 
       expect(response).toEqual(
@@ -94,7 +94,7 @@ describe("Integration Suite", () => {
           )
         ),
         PgClient.provide,
-        runtime.runPromiseExit
+        runPromiseExit
       )
 
       expect(response).toEqual(
@@ -125,7 +125,7 @@ describe("Integration Suite", () => {
       const result = await pipe(
         createUser({ name: "Michael" }),
         PgClient.provide,
-        runtime.runPromiseExit
+        runPromiseExit
       )
 
       const nameAndId = pipe(User.lens, Lens.props("name", "id"))
@@ -139,7 +139,7 @@ describe("Integration Suite", () => {
       const result = await pipe(
         createUser({ name: "" }),
         PgClient.provide,
-        runtime.runPromiseExit
+        runPromiseExit
       )
 
       expect(result).toEqual(
@@ -150,11 +150,7 @@ describe("Integration Suite", () => {
     it("create arbitrary users", async () => {
       await fc.check(
         fc.asyncProperty(arbitrary(CreateUser), async (_) => {
-          const result = await pipe(
-            createUser(_),
-            PgClient.provide,
-            runtime.runPromiseExit
-          )
+          const result = await pipe(createUser(_), PgClient.provide, runPromiseExit)
 
           expect(result._tag).toEqual("Success")
         }),
@@ -171,7 +167,7 @@ describe("Integration Suite", () => {
           )
         ),
         PgClient.provide,
-        runtime.runPromiseExit
+        runPromiseExit
       )
 
       expect(response).toEqual(Ex.succeed(101))
