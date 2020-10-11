@@ -6,7 +6,7 @@ import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import * as fc from "fast-check"
 
-import { createUser, Live as UserPersistenceLive } from "../src/api/user"
+import { createUser, Live as UserPersistenceLive, updateUser } from "../src/api/user"
 import * as Db from "../src/db/Db"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
@@ -250,6 +250,21 @@ describe("Integration Suite", () => {
 
       assertSuccess(countSuccess)
       expect(countSuccess.value).toEqual(3)
+    })
+
+    it("creates and updates user", async () => {
+      const result = await runPromiseExit(
+        pipe(
+          createUser({
+            name: "OldName"
+          }),
+          T.chain((user) => updateUser({ ...user, name: "NewName" })),
+          T.map((_) => _.name),
+          Db.fromPool
+        )
+      )
+
+      expect(result).toEqual(Ex.succeed("NewName"))
     })
   })
 })
