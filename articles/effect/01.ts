@@ -16,4 +16,4 @@ const division = pipe(
   )
 )
 
-pipe(division, T.provideAll({ x: 1, y: 0 }), T.runMain)
+pipe(division, T.provideAll({ x: 1, y: 1 }), T.runMain)
