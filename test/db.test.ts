@@ -27,7 +27,10 @@ describe("Integration Suite", () => {
     L.using(TestContainersLive("integration")),
     restrictToPublic,
     testRuntime
-  )
+  )({
+    open: 30_000,
+    close: 30_000
+  })
 
   describe("Bootstrap", () => {
     it("run simple query", async () => {
