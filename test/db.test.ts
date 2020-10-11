@@ -136,7 +136,7 @@ describe("Integration Suite", () => {
       )
     })
 
-    it("fail to create a new user with an ampty name", async () => {
+    it("fail to create a new user with an empty name", async () => {
       const result = await pipe(createUser({ name: "" }), Db.fromPool, runPromiseExit)
 
       expect(result).toEqual(
@@ -151,7 +151,7 @@ describe("Integration Suite", () => {
 
           expect(result._tag).toEqual("Success")
         }),
-        { numRuns: 100, endOnFailure: true, timeout: 1000 }
+        { endOnFailure: true, timeout: 1000 }
       )
     })
 
@@ -168,7 +168,7 @@ describe("Integration Suite", () => {
       )
 
       expect(response._tag).toEqual("Success")
-      expect(response._tag === "Success" ? response.value : 0).toBeGreaterThan(100)
+      expect(response._tag === "Success" ? response.value : 0).toBeGreaterThan(10)
     })
 
     it("transactional dsl handles success/failure with commit/rollback", async () => {
