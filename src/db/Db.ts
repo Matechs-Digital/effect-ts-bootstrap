@@ -18,6 +18,14 @@ export class LiveDb {
       (): Promise<QueryResult<QueryResultRow>> => this.client.query(queryString, args)
     )
   }
+
+  transaction<R, E, A>(body: T.Effect<R, E, A>) {
+    return T.bracketExit_(
+      this.query("BEGIN"),
+      () => body,
+      (_, e) => (e._tag === "Success" ? this.query("COMMIT") : this.query("ROLLBACK"))
+    )
+  }
 }
 
 export interface Db extends LiveDb {}
@@ -28,3 +36,9 @@ export const provideDbFromPool = <R, E, A>(self: T.Effect<R & Has<Db>, E, A>) =>
   withPoolClientM((client) => pipe(self, T.provideService(Db)(new LiveDb(client))))
 
 export const { query } = T.deriveLifted(Db)(["query"], [], [])
+
+export function transaction<R, E, A>(
+  body: T.Effect<R, E, A>
+): T.Effect<R & Has<Db>, E, A> {
+  return T.accessServiceM(Db)((_) => _.transaction(body))
+}
