@@ -8,10 +8,11 @@ import { fail } from "@effect-ts/morphic/Decoder/common"
 import { encoder } from "@effect-ts/morphic/Encoder"
 import { strictDecoder } from "@effect-ts/morphic/StrictDecoder"
 
-import { Common } from "./common"
+import { Common, commonErrorIds } from "./common"
 import { validation } from "./validation"
 
 export const userErrorIds = {
+  ...commonErrorIds,
   user_name_length: "user_name_length"
 }
 

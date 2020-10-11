@@ -4,6 +4,7 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { flow } from "@effect-ts/core/Function"
 
 import { query } from "../db/Db"
+import { encodeId, validateId } from "../model/common"
 import {
   decodeUser,
   encodeCreateUser,
@@ -12,7 +13,19 @@ import {
   validateUser
 } from "../model/user"
 
+export class UserNotFound {
+  readonly _tag = "UserNotFound"
+}
+
 export const makeUserPersistence = () => ({
+  getUser: flow(
+    encodeId,
+    T.chain(({ id }) => query(`SELECT * FROM users WHERE id = $1::bigint`, id)),
+    T.chain((_) =>
+      _.rows.length > 0 ? T.succeed(_.rows[0]) : T.fail(new UserNotFound())
+    ),
+    T.chain(flow(decodeUser, T.orDie))
+  ),
   createUser: flow(
     validateCreateUser,
     T.chain(encodeCreateUser),
@@ -43,8 +56,8 @@ export const UserPersistence = has<UserPersistence>()
 
 export const Live = L.fromConstructor(UserPersistence)(makeUserPersistence)()
 
-export const { createUser, updateUser } = T.deriveLifted(UserPersistence)(
-  ["createUser", "updateUser"],
+export const { createUser, getUser, updateUser } = T.deriveLifted(UserPersistence)(
+  ["createUser", "updateUser", "getUser"],
   [],
   []
 )

@@ -1,6 +1,8 @@
-import { right } from "@effect-ts/core/Classic/Either"
+import { left, right } from "@effect-ts/core/Classic/Either"
 import * as T from "@effect-ts/core/Classic/Sync"
+import { DecodeError } from "@effect-ts/morphic/Decoder/common"
 
+import { decodeId, encodeId } from "../src/model/common"
 import { decodeUser } from "../src/model/user"
 
 it("decodes user", () => {
@@ -18,5 +20,26 @@ it("decodes user", () => {
       id: BigInt(1),
       name: "Michael"
     })
+  )
+})
+
+it("decodes id", () => {
+  expect(
+    T.runEither(
+      decodeId({
+        id: "bla"
+      })
+    )
+  ).toEqual(
+    left(
+      new DecodeError([
+        {
+          actual: "bla",
+          id: "bad_id_format",
+          message: "id should be a big integer encoded as a string",
+          name: "id"
+        }
+      ])
+    )
   )
 })
