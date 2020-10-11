@@ -32,7 +32,7 @@ export interface Db extends LiveDb {}
 
 export const Db = has<Db>()
 
-export const provideDbFromPool = <R, E, A>(self: T.Effect<R & Has<Db>, E, A>) =>
+export const fromPool = <R, E, A>(self: T.Effect<R & Has<Db>, E, A>) =>
   withPoolClientM((client) => pipe(self, T.provideService(Db)(new LiveDb(client))))
 
 export const { query } = T.deriveLifted(Db)(["query"], [], [])
