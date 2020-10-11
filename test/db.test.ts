@@ -4,7 +4,6 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
-import { AssertionError } from "assert"
 import * as fc from "fast-check"
 
 import { createUser, Live as UserPersistenceLive } from "../src/api/user"
