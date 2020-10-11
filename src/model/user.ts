@@ -25,7 +25,7 @@ const CreateUser_ = make((F) =>
           decode: flow(
             _.decode,
             S.chain((s) =>
-              s.length > 0 && s.length < 255
+              s.length > 0 && s.length <= 255
                 ? S.succeed(s)
                 : fail([
                     {
