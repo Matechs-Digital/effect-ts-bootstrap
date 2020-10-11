@@ -4,11 +4,18 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { flow } from "@effect-ts/core/Function"
 
 import { query } from "../db/Db"
-import { decodeUser, encodeUser, validateCreateUser, validateUser } from "../model/user"
+import {
+  decodeUser,
+  encodeCreateUser,
+  encodeUser,
+  validateCreateUser,
+  validateUser
+} from "../model/user"
 
 export const makeUserPersistence = () => ({
   createUser: flow(
     validateCreateUser,
+    T.chain(encodeCreateUser),
     T.chain(({ name }) =>
       query(`INSERT INTO users (name) VALUES ($1::text) RETURNING *`, name)
     ),
