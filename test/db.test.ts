@@ -125,7 +125,7 @@ describe("Integration Suite", () => {
     it("creates a new user", async () => {
       const result = await pipe(
         createUser({ name: "Michael" }),
-        Db.provideDbFromPool,
+        Db.fromPool,
         runPromiseExit
       )
 
@@ -137,11 +137,7 @@ describe("Integration Suite", () => {
     })
 
     it("fail to create a new user with an ampty name", async () => {
-      const result = await pipe(
-        createUser({ name: "" }),
-        Db.provideDbFromPool,
-        runPromiseExit
-      )
+      const result = await pipe(createUser({ name: "" }), Db.fromPool, runPromiseExit)
 
       expect(result).toEqual(
         Ex.fail(new ValidationError("name should be between 0 and 255 characters long"))
@@ -151,7 +147,7 @@ describe("Integration Suite", () => {
     it("create arbitrary users", async () => {
       await fc.check(
         fc.asyncProperty(arbitrary(CreateUser), async (_) => {
-          const result = await pipe(createUser(_), Db.provideDbFromPool, runPromiseExit)
+          const result = await pipe(createUser(_), Db.fromPool, runPromiseExit)
 
           expect(result._tag).toEqual("Success")
         }),
@@ -183,7 +179,7 @@ describe("Integration Suite", () => {
         ),
         T.tap(() => T.fail("error")),
         Db.transaction,
-        Db.provideDbFromPool,
+        Db.fromPool,
         runPromiseExit
       )
 
@@ -212,7 +208,7 @@ describe("Integration Suite", () => {
         ),
         T.map((_) => _.length),
         Db.transaction,
-        Db.provideDbFromPool,
+        Db.fromPool,
         runPromiseExit
       )
 
