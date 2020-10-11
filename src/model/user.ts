@@ -59,6 +59,7 @@ export const User = opaque<UserRaw, User>()(User_)
 export const decodeUser = strictDecoder(User).decode
 export const encodeUser = encoder(User).encode
 export const encodeCreateUser = encoder(CreateUser).encode
+export const decodeCreateUser = strictDecoder(CreateUser).decode
 
 export const userErrors = (_: DecodingError) =>
   _.id != null && _.id in userErrorIds && _.message != null && _.message.length > 0
