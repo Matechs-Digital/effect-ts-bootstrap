@@ -70,7 +70,7 @@ describe("Integration Suite", () => {
           {
             table_name: "users",
             column_name: "name",
-            data_type: "character varying"
+            data_type: "text"
           },
           {
             table_name: "users",
