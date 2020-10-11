@@ -34,37 +34,39 @@ describe("Integration Suite", () => {
 
   describe("Bootstrap", () => {
     it("run simple query", async () => {
-      const response = await pipe(
-        PgClient.accessM((client) =>
-          pipe(
-            T.fromPromiseDie(() =>
-              client.query("SELECT $1::text as name", ["Michael"])
-            ),
-            T.map((_): string => _.rows[0].name)
-          )
-        ),
-        PgClient.provide,
-        runPromiseExit
+      const response = await runPromiseExit(
+        pipe(
+          PgClient.accessM((client) =>
+            pipe(
+              T.fromPromiseDie(() =>
+                client.query("SELECT $1::text as name", ["Michael"])
+              ),
+              T.map((_): string => _.rows[0].name)
+            )
+          ),
+          PgClient.provide
+        )
       )
 
       expect(response).toEqual(Ex.succeed("Michael"))
     })
 
     it("check users table structure", async () => {
-      const response = await pipe(
-        PgClient.accessM((client) =>
-          pipe(
-            T.fromPromiseDie(() =>
-              client.query(
-                "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
-                ["users"]
-              )
-            ),
-            T.map((_) => _.rows)
-          )
-        ),
-        PgClient.provide,
-        runPromiseExit
+      const response = await runPromiseExit(
+        pipe(
+          PgClient.accessM((client) =>
+            pipe(
+              T.fromPromiseDie(() =>
+                client.query(
+                  "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
+                  ["users"]
+                )
+              ),
+              T.map((_) => _.rows)
+            )
+          ),
+          PgClient.provide
+        )
       )
 
       expect(response).toEqual(
@@ -85,20 +87,21 @@ describe("Integration Suite", () => {
     })
 
     it("check posts table structure", async () => {
-      const response = await pipe(
-        PgClient.accessM((client) =>
-          pipe(
-            T.fromPromiseDie(() =>
-              client.query(
-                "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
-                ["posts"]
-              )
-            ),
-            T.map((_) => _.rows)
-          )
-        ),
-        PgClient.provide,
-        runPromiseExit
+      const response = await runPromiseExit(
+        pipe(
+          PgClient.accessM((client) =>
+            pipe(
+              T.fromPromiseDie(() =>
+                client.query(
+                  "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
+                  ["posts"]
+                )
+              ),
+              T.map((_) => _.rows)
+            )
+          ),
+          PgClient.provide
+        )
       )
 
       expect(response).toEqual(
@@ -126,10 +129,8 @@ describe("Integration Suite", () => {
 
   describe("User Api", () => {
     it("creates a new user", async () => {
-      const result = await pipe(
-        createUser({ name: "Michael" }),
-        Db.fromPool,
-        runPromiseExit
+      const result = await runPromiseExit(
+        pipe(createUser({ name: "Michael" }), Db.fromPool)
       )
 
       const nameAndId = pipe(User.lens, Lens.props("name", "id"))
@@ -140,7 +141,7 @@ describe("Integration Suite", () => {
     })
 
     it("fail to create a new user with an empty name", async () => {
-      const result = await pipe(createUser({ name: "" }), Db.fromPool, runPromiseExit)
+      const result = await runPromiseExit(pipe(createUser({ name: "" }), Db.fromPool))
 
       expect(result).toEqual(
         Ex.fail(new ValidationError("name should be between 0 and 255 characters long"))
@@ -150,7 +151,7 @@ describe("Integration Suite", () => {
     it("create arbitrary users", async () => {
       await fc.assert(
         fc.asyncProperty(arbitrary(CreateUser), async (_) => {
-          const result = await pipe(createUser(_), Db.fromPool, runPromiseExit)
+          const result = await runPromiseExit(pipe(createUser(_), Db.fromPool))
 
           expect(result._tag).toEqual("Success")
         }),
@@ -159,15 +160,16 @@ describe("Integration Suite", () => {
     })
 
     it("find users created from previous steps", async () => {
-      const response = await pipe(
-        PgClient.accessM((client) =>
-          pipe(
-            T.fromPromiseDie(() => client.query("SELECT COUNT(*) FROM users")),
-            T.map((_) => parseInt(_.rows[0].count))
-          )
-        ),
-        PgClient.provide,
-        runPromiseExit
+      const response = await runPromiseExit(
+        pipe(
+          PgClient.accessM((client) =>
+            pipe(
+              T.fromPromiseDie(() => client.query("SELECT COUNT(*) FROM users")),
+              T.map((_) => parseInt(_.rows[0].count))
+            )
+          ),
+          PgClient.provide
+        )
       )
 
       expect(response._tag).toEqual("Success")
@@ -175,60 +177,64 @@ describe("Integration Suite", () => {
     })
 
     it("transactional dsl handles success/failure with commit/rollback", async () => {
-      const result = await pipe(
-        T.tuple(
-          createUser({ name: "USER_0" }),
-          createUser({ name: "USER_1" }),
-          createUser({ name: "USER_2" })
-        ),
-        T.tap(() => T.fail("error")),
-        Db.transaction,
-        Db.fromPool,
-        runPromiseExit
+      const result = await runPromiseExit(
+        pipe(
+          T.tuple(
+            createUser({ name: "USER_0" }),
+            createUser({ name: "USER_1" }),
+            createUser({ name: "USER_2" })
+          ),
+          T.tap(() => T.fail("error")),
+          Db.transaction,
+          Db.fromPool
+        )
       )
 
       expect(result).toEqual(Ex.fail("error"))
 
-      const count = await pipe(
-        PgClient.accessM((client) =>
-          pipe(
-            T.fromPromiseDie(() =>
-              client.query("SELECT COUNT(*) FROM users WHERE name LIKE 'USER_%'")
-            ),
-            T.map((_) => parseInt(_.rows[0].count))
-          )
-        ),
-        PgClient.provide,
-        runPromiseExit
+      const count = await runPromiseExit(
+        pipe(
+          PgClient.accessM((client) =>
+            pipe(
+              T.fromPromiseDie(() =>
+                client.query("SELECT COUNT(*) FROM users WHERE name LIKE 'USER_%'")
+              ),
+              T.map((_) => parseInt(_.rows[0].count))
+            )
+          ),
+          PgClient.provide
+        )
       )
 
       expect(count).toEqual(Ex.succeed(0))
 
-      const resultSuccess = await pipe(
-        T.tuple(
-          createUser({ name: "USER_0" }),
-          createUser({ name: "USER_1" }),
-          createUser({ name: "USER_2" })
-        ),
-        T.map((_) => _.length),
-        Db.transaction,
-        Db.fromPool,
-        runPromiseExit
+      const resultSuccess = await runPromiseExit(
+        pipe(
+          T.tuple(
+            createUser({ name: "USER_0" }),
+            createUser({ name: "USER_1" }),
+            createUser({ name: "USER_2" })
+          ),
+          T.map((_) => _.length),
+          Db.transaction,
+          Db.fromPool
+        )
       )
 
       expect(resultSuccess).toEqual(Ex.succeed(3))
 
-      const countSuccess = await pipe(
-        PgClient.accessM((client) =>
-          pipe(
-            T.fromPromiseDie(() =>
-              client.query("SELECT COUNT(*) FROM users WHERE name LIKE 'USER_%'")
-            ),
-            T.map((_) => parseInt(_.rows[0].count))
-          )
-        ),
-        PgClient.provide,
-        runPromiseExit
+      const countSuccess = await runPromiseExit(
+        pipe(
+          PgClient.accessM((client) =>
+            pipe(
+              T.fromPromiseDie(() =>
+                client.query("SELECT COUNT(*) FROM users WHERE name LIKE 'USER_%'")
+              ),
+              T.map((_) => parseInt(_.rows[0].count))
+            )
+          ),
+          PgClient.provide
+        )
       )
 
       expect(countSuccess).toEqual(Ex.succeed(3))
