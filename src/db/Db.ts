@@ -2,7 +2,6 @@ import type { Has } from "@effect-ts/core/Classic/Has"
 import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import { pipe } from "@effect-ts/core/Function"
-import type { Newtype } from "@effect-ts/core/Newtype"
 import type { QueryResult, QueryResultRow } from "pg"
 
 import type * as Pg from "./PgClient"
