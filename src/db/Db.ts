@@ -8,7 +8,7 @@ import type { QueryResult, QueryResultRow } from "pg"
 import type * as Pg from "./PgClient"
 import { withPoolClientM } from "./PgPool"
 
-export type Supported = number | string | Newtype<any, Supported> | null | undefined
+export type Supported = number | string | boolean | null | undefined
 
 export class LiveDb {
   constructor(private readonly client: Pg.PgClient["client"]) {}
