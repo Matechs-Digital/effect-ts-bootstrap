@@ -12,21 +12,15 @@ interface ErrorA {
   _tag: "ErrorA"
   value: string
 }
-interface ErrorB {
-  _tag: "ErrorB"
-  value: string
-}
 
-// T.Effect<InputA & InputB, ErrorA | ErrorB, void>
+// T.Effect<InputA & InputB, ErrorA, void>
 const program = pipe(
   T.access((_: InputA) => _.x),
   T.chain((n) =>
     n === 0 ? T.fail<ErrorA>({ _tag: "ErrorA", value: "n === 0" }) : T.succeed(n)
   ),
   T.chain((n) => T.access((_: InputB) => _.y + n)),
-  T.chain((n) =>
-    n === 10 ? T.fail<ErrorB>({ _tag: "ErrorB", value: "n === 10" }) : T.succeed(n)
-  ),
+  T.chain((n) => (n === 10 ? T.die("something very wrong happened") : T.succeed(n))),
   T.chain((n) =>
     T.effectTotal(() => {
       console.log(n)
@@ -45,9 +39,15 @@ const programAfterErrorHandling = pipe(
             console.log(`handling ErrorA: ${value}`)
           })
       },
-      T.fail
+      (e) =>
+        pipe(
+          T.effectTotal(() => {
+            console.log(`Default Handler`)
+          }),
+          T.andThen(T.fail(e))
+        )
     )
   )
 )
 
-pipe(programAfterErrorHandling, T.provideAll({ x: 1, y: 1 }), T.runMain)
+pipe(programAfterErrorHandling, T.provideAll({ x: 1, y: 9 }), T.runMain)

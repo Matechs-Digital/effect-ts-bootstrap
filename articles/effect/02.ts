@@ -5,7 +5,7 @@ interface InputA {
   x: number
 }
 interface InputB {
-  x: number
+  y: number
 }
 interface ErrorA {
   _tag: "ErrorA"
@@ -22,7 +22,7 @@ const program = pipe(
   T.chain((n) =>
     n === 0 ? T.fail<ErrorA>({ _tag: "ErrorA", value: "n === 0" }) : T.succeed(n)
   ),
-  T.chain((n) => T.access((_: InputB) => _.x + n)),
+  T.chain((n) => T.access((_: InputB) => _.y + n)),
   T.chain((n) =>
     n === 10 ? T.fail<ErrorB>({ _tag: "ErrorB", value: "n === 10" }) : T.succeed(n)
   ),
