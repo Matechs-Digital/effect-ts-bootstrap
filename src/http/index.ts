@@ -6,6 +6,7 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import * as Q from "@effect-ts/core/Effect/Queue"
 import { pipe } from "@effect-ts/core/Function"
+import { intersect } from "@effect-ts/core/Utils"
 import * as http from "http"
 
 export interface HTTPServerConfig {
@@ -32,15 +33,17 @@ export interface Request {
 
 export interface Server {
   server: http.Server
+}
+
+export interface RequestQueue {
   queue: Q.Queue<Request>
 }
 
 export const Server = has<Server>()
+export const RequestQueue = has<RequestQueue>()
 
-export const { queue: accessQueueM, server: accessServerM } = T.deriveAccessM(Server)([
-  "queue",
-  "server"
-])
+export const { queue: accessQueueM } = T.deriveAccessM(RequestQueue)(["queue"])
+export const { server: accessServerM } = T.deriveAccessM(Server)(["server"])
 
 export const Live = pipe(
   Q.makeUnbounded<Request>(),
@@ -51,7 +54,7 @@ export const Live = pipe(
           T.run(queue.offer({ req, res }))
         })
       ),
-      T.map((server): Server => ({ server, queue }))
+      T.map((server): Server & RequestQueue => ({ server, queue }))
     )
   ),
   T.tap(({ server }) =>
@@ -97,5 +100,6 @@ export const Live = pipe(
       T.chain(([ea, eb]) => T.done(Ex.zip(eb)(ea)))
     )
   ),
-  L.fromManaged(Server)
+  M.map((_) => intersect(Server.of(_), RequestQueue.of(_))),
+  L.fromRawManaged
 )
