@@ -58,7 +58,7 @@ export function addAuth<R, E>(routes: HTTP.Routes<R & Has<AuthSession>, E>) {
   )
 }
 
-export const HTTPServer = pipe(
+export const App = pipe(
   HTTP.create,
   addHome,
   addBar,
@@ -67,8 +67,8 @@ export const HTTPServer = pipe(
   L.fromRawEffect
 )
 
-export const App = pipe(
-  HTTPServer,
+export const Bootstrap = pipe(
+  App,
   L.using(L.allPar(LiveHTTPServer, LiveFoo, LiveBar)),
   L.using(
     makeHTTPServerConfig({
@@ -80,5 +80,5 @@ export const App = pipe(
 
 // main function (unsafe)
 export function main() {
-  return pipe(T.never, T.provideSomeLayer(App), T.runMain)
+  return pipe(T.never, T.provideSomeLayer(Bootstrap), T.runMain)
 }
