@@ -30,7 +30,7 @@ export const bar = R.route(({ req, res }, next) =>
     : next
 )
 
-const middle = <R>(routes: R.Routes<R>) =>
+export const middle = <R>(routes: R.Routes<R>) =>
   pipe(
     routes,
     R.middleware((cont) => (request, next) =>
