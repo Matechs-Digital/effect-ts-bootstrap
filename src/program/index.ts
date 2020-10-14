@@ -4,6 +4,10 @@ import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
+import {
+  HTTPRouteException,
+  isHTTPRouteException
+} from "../exceptions/HTTPRouteException"
 import * as R from "../router"
 import { accessMaybeUserM, AuthSession } from "./AuthSession"
 import { accessBarM } from "./Bar"
@@ -44,14 +48,18 @@ export const bar = R.route(({ req, res }, next) =>
     : next
 )
 
-export function middle<R>(routes: R.Routes<R & Has<AuthSession>>) {
+export function authMiddleware<R, E>(routes: R.Routes<R & Has<AuthSession>, E>) {
   return pipe(
     routes,
-    R.middleware((cont) => (request, next) =>
-      request.req.url === "/middle"
-        ? T.effectTotal(() => {
-            request.res.end("Middle!")
-          })
+    R.middleware((cont: R.RouteFn<R & Has<AuthSession>, E>) => (request, next) =>
+      request.req.url === "/secret"
+        ? T.fail<E | HTTPRouteException>(
+            HTTPRouteException.build({
+              _tag: "HTTPRouteException",
+              message: "Forbidden!",
+              status: 403
+            })
+          )
         : T.provideService(AuthSession)({ maybeUser: O.some("Michael") })(
             cont(request, next)
           )
@@ -59,4 +67,31 @@ export function middle<R>(routes: R.Routes<R & Has<AuthSession>>) {
   )
 }
 
-export const Live = pipe(R.init, home, bar, middle, R.run, L.fromRawEffect)
+export function exceptionHandler<R, E>(routes: R.Routes<R, E>) {
+  return pipe(
+    routes,
+    R.middleware((cont) => (request, next) =>
+      T.catchAll_(cont(request, next), (e) =>
+        T.suspend(() => {
+          if (isHTTPRouteException(e)) {
+            request.res.statusCode = e.status
+            request.res.end(e.message)
+            return T.unit
+          } else {
+            return T.fail(e as Exclude<E, HTTPRouteException>)
+          }
+        })
+      )
+    )
+  )
+}
+
+export const Live = pipe(
+  R.init,
+  home,
+  bar,
+  authMiddleware,
+  exceptionHandler,
+  R.run,
+  L.fromRawEffect
+)
