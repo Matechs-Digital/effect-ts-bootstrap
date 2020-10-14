@@ -9,8 +9,7 @@ import * as Foo from "../program/Foo"
 
 export const Live = pipe(
   Program.Live,
-  L.using(L.allPar(Foo.LiveFoo, Bar.LiveBar)),
-  L.using(Http.Live),
+  L.using(L.allPar(Http.Live, Foo.LiveFoo, Bar.LiveBar)),
   L.using(
     Http.makeHTTPServerConfig({
       host: "0.0.0.0",

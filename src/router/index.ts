@@ -54,8 +54,14 @@ export function run<R>(_: Routes<R>) {
 
   const processFn = T.accessM((r: R) =>
     T.effectTotal(() =>
-      A.reduce_(routes, <ProcessFn>((_: Request) => T.unit), (b, a) => (_) =>
-        T.provideAll_(a(_, b(_)), r)
+      A.reduce_(
+        routes,
+        <ProcessFn>((_: Request) =>
+          T.effectTotal(() => {
+            _.res.statusCode = 404
+            _.res.end()
+          })),
+        (b, a) => (_) => T.provideAll_(a(_, b(_)), r)
       )
     )
   )
