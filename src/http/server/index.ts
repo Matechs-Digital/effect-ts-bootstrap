@@ -20,7 +20,7 @@ export const HTTPServerConfig = has<HTTPServerConfig>()
 
 export const { config: accessConfigM } = T.deriveAccessM(HTTPServerConfig)(["config"])
 
-export function makeHTTPServerConfig(
+export function config(
   config: HTTPServerConfig["config"]
 ): L.Layer<unknown, never, Has<HTTPServerConfig>> {
   return L.create(HTTPServerConfig).pure({ config })

@@ -5,7 +5,6 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
 import * as HTTP from "../http"
-import { LiveHTTPServer, makeHTTPServerConfig } from "../http"
 import { accessBarM, LiveBar } from "../program/Bar"
 import { accessFooM, LiveFoo } from "../program/Foo"
 import { accessMaybeUserM, AuthSession } from "./AuthSession"
@@ -69,9 +68,9 @@ export const App = pipe(
 
 export const Bootstrap = pipe(
   App,
-  L.using(L.allPar(LiveHTTPServer, LiveFoo, LiveBar)),
+  L.using(L.allPar(HTTP.Live, LiveFoo, LiveBar)),
   L.using(
-    makeHTTPServerConfig({
+    HTTP.config({
       host: "0.0.0.0",
       port: 8081
     })
