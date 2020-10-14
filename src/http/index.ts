@@ -1,4 +1,4 @@
-export { addMiddleware, addRoute, create, drain, Routes } from "./router"
+export { addMiddleware, addRoute, create, Routes } from "./router"
 export {
   makeHTTPServerConfig,
   HTTPServerConfig,
@@ -10,3 +10,5 @@ export {
   Server,
   Live as LiveHTTPServer
 } from "./server"
+export { HTTPRouteException, isHTTPRouteException } from "./exceptions"
+export { drain } from "./middlewares"

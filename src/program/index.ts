@@ -4,8 +4,6 @@ import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
-import type { HTTPRouteException } from "../exceptions/HTTPRouteException"
-import { isHTTPRouteException } from "../exceptions/HTTPRouteException"
 import * as HTTP from "../http"
 import { accessMaybeUserM, AuthSession } from "./AuthSession"
 import { accessBarM } from "./Bar"
@@ -47,7 +45,7 @@ export function addAuth<R, E>(routes: HTTP.Routes<R & Has<AuthSession>, E>) {
     routes,
     HTTP.addMiddleware((cont) => (request, next) =>
       request.req.url === "/secret"
-        ? T.fail<E | HTTPRouteException>({
+        ? T.fail<E | HTTP.HTTPRouteException>({
             _tag: "HTTPRouteException",
             message: "Forbidden!",
             status: 403
@@ -59,32 +57,6 @@ export function addAuth<R, E>(routes: HTTP.Routes<R & Has<AuthSession>, E>) {
   )
 }
 
-export function addHandler<R, E>(routes: HTTP.Routes<R, E>) {
-  return pipe(
-    routes,
-    HTTP.addMiddleware((cont) => (request, next) =>
-      T.catchAll_(cont(request, next), (e) =>
-        T.suspend(() => {
-          if (isHTTPRouteException(e)) {
-            request.res.statusCode = e.status
-            request.res.end(e.message)
-            return T.unit
-          } else {
-            return T.fail(<Exclude<E, HTTPRouteException>>e)
-          }
-        })
-      )
-    )
-  )
-}
-
-export const process = pipe(
-  HTTP.create,
-  addHome,
-  addBar,
-  addAuth,
-  addHandler,
-  HTTP.drain
-)
+export const process = pipe(HTTP.create, addHome, addBar, addAuth, HTTP.drain)
 
 export const LiveProgram = L.fromRawEffect(process)
