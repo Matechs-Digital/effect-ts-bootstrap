@@ -5,9 +5,10 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
 import * as HTTP from "../http"
+import { LiveHTTPServer, makeHTTPServerConfig } from "../http"
+import { accessBarM, LiveBar } from "../program/Bar"
+import { accessFooM, LiveFoo } from "../program/Foo"
 import { accessMaybeUserM, AuthSession } from "./AuthSession"
-import { accessBarM } from "./Bar"
-import { accessFooM } from "./Foo"
 
 export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
   accessFooM((foo) =>
@@ -57,6 +58,27 @@ export function addAuth<R, E>(routes: HTTP.Routes<R & Has<AuthSession>, E>) {
   )
 }
 
-export const process = pipe(HTTP.create, addHome, addBar, addAuth, HTTP.drain)
+export const HTTPServer = pipe(
+  HTTP.create,
+  addHome,
+  addBar,
+  addAuth,
+  HTTP.drain,
+  L.fromRawEffect
+)
 
-export const LiveProgram = L.fromRawEffect(process)
+export const App = pipe(
+  HTTPServer,
+  L.using(L.allPar(LiveHTTPServer, LiveFoo, LiveBar)),
+  L.using(
+    makeHTTPServerConfig({
+      host: "0.0.0.0",
+      port: 8081
+    })
+  )
+)
+
+// main function (unsafe)
+export function main() {
+  return pipe(T.never, T.provideSomeLayer(App), T.runMain)
+}
