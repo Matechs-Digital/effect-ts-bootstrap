@@ -3,20 +3,25 @@ import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
-import * as Calc from "./calculator"
+import { Server } from "./http"
 
 // program
 
-export function LiveProgram(Calc: Calc.Calculator) {
+export function LiveProgram({ queue }: Server) {
   return {
     main: pipe(
-      T.zip_(Calc.gen(1), T.effectTotal(Calc.factorFun)),
-      T.chain((_) => T.tuple(Calc.base, T.succeed(Calc.factor), T.succeed(_))),
-      T.chain(([b, f, [x, y]]) =>
-        T.chain_(Calc.add(b, f), (k) => T.succeed(k + x + y))
+      queue.take,
+      T.chain(({ req, res }) =>
+        pipe(
+          T.effectTotal(() => {
+            console.log(`Process: ${req.url}`)
+            res.end("ok")
+          }),
+          T.delay(200),
+          T.fork
+        )
       ),
-      T.chain((sum) => Calc.mul(sum, 3)),
-      T.chain(Calc.log)
+      T.forever
     )
   }
 }
@@ -25,6 +30,6 @@ export interface Program extends ReturnType<typeof LiveProgram> {}
 
 export const Program = has<Program>()
 
-export const Live = L.fromConstructor(Program)(LiveProgram)(Calc.Calculator)
+export const Live = L.fromConstructor(Program)(LiveProgram)(Server)
 
 export const { main } = T.deriveLifted(Program)([], ["main"], [])
