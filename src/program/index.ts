@@ -1,4 +1,5 @@
 import * as T from "@effect-ts/core/Effect"
+import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
 import * as R from "../router"
@@ -29,4 +30,4 @@ export const bar = R.route(({ req, res }, next) =>
     : next
 )
 
-export const main = pipe(R.init, home, bar, R.run)
+export const Live = pipe(R.init, home, bar, R.run, T.as({}), L.fromRawEffect)

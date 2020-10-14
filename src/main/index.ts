@@ -8,7 +8,8 @@ import * as Bar from "../program/Bar"
 import * as Foo from "../program/Foo"
 
 export const Live = pipe(
-  L.allPar(Foo.LiveFoo, Bar.LiveBar),
+  Program.Live,
+  L.using(L.allPar(Foo.LiveFoo, Bar.LiveBar)),
   L.using(Http.Live),
   L.using(
     Http.makeHTTPServerConfig({
@@ -20,5 +21,5 @@ export const Live = pipe(
 
 // main function (unsafe)
 export function main() {
-  return pipe(Program.main, T.provideSomeLayer(Live), T.runMain)
+  return pipe(T.never, T.provideSomeLayer(Live), T.runMain)
 }
