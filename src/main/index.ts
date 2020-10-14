@@ -3,10 +3,12 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
 import * as Http from "../http"
-import * as Program from "../program/program"
+import * as Program from "../program"
+import * as Bar from "../program/Bar"
+import * as Foo from "../program/Foo"
 
 export const Live = pipe(
-  Program.Live,
+  L.allPar(Foo.LiveFoo, Bar.LiveBar),
   L.using(Http.Live),
   L.using(
     Http.makeHTTPServerConfig({
