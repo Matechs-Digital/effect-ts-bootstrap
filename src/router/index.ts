@@ -1,6 +1,7 @@
 import * as A from "@effect-ts/core/Classic/Array"
 import * as FA from "@effect-ts/core/Classic/FreeAssociative"
 import * as T from "@effect-ts/core/Effect"
+import type { Predicate } from "@effect-ts/core/Function"
 import { flow, pipe } from "@effect-ts/core/Function"
 
 import type { Request } from "../http"
@@ -39,11 +40,24 @@ export class Concat<R, E> {
 
 export type Routes<R, E> = Route<R, E> | Concat<R, E> | Empty<R, E>
 
-export function route<R, E>(
-  route: (request: Request, next: T.UIO<void>) => T.Effect<R, E, void>
+export function route<R2, E2, R, E>(
+  f: (request: Request, next: T.Effect<R2, E2, void>) => T.Effect<R, E, void>
 ) {
-  return <R2, E2>(self: Routes<R2, E2>): Routes<R & R2, E | E2> =>
-    new Concat(self, new Route(route as any) as any) as any
+  return (self: Routes<R2, E2>): Routes<R, E> =>
+    new Concat(self, new Route(f as any) as any) as any
+}
+
+export function match(path: Predicate<string>) {
+  return <R, E>(f: (request: Request) => T.Effect<R, E, void>) => <R2, E2>(
+    self: Routes<R2, E2>
+  ): Routes<R & R2, E | E2> =>
+    pipe(
+      self,
+      route(
+        (_, n): T.Effect<R & R2, E | E2, void> =>
+          _.req.url ? (path(_.req.url) ? f(_) : n) : n
+      )
+    )
 }
 
 export function middleware<R2, R, E, E2>(

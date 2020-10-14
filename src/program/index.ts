@@ -11,39 +11,35 @@ import { accessMaybeUserM, AuthSession } from "./AuthSession"
 import { accessBarM } from "./Bar"
 import { accessFooM } from "./Foo"
 
-export const home = R.route(({ req, res }, next) =>
-  req.url === "/"
-    ? accessFooM((foo) =>
-        T.delay(200)(
-          T.effectTotal(() => {
-            res.end(foo)
-          })
-        )
-      )
-    : next
+export const home = R.match((url) => url === "/")(({ res }) =>
+  accessFooM((foo) =>
+    T.delay(200)(
+      T.effectTotal(() => {
+        res.end(foo)
+      })
+    )
+  )
 )
 
-export const bar = R.route(({ req, res }, next) =>
-  req.url === "/bar"
-    ? accessBarM((bar) =>
-        accessMaybeUserM((maybeUser) =>
-          T.delay(200)(
-            T.effectTotal(() => {
-              O.fold_(
-                maybeUser,
-                () => {
-                  res.statusCode = 401
-                  res.end()
-                },
-                (user) => {
-                  res.end(`${user}: ${bar}`)
-                }
-              )
-            })
+export const bar = R.match((url) => url === "/bar")(({ res }) =>
+  accessBarM((bar) =>
+    accessMaybeUserM((maybeUser) =>
+      T.delay(200)(
+        T.effectTotal(() => {
+          O.fold_(
+            maybeUser,
+            () => {
+              res.statusCode = 401
+              res.end()
+            },
+            (user) => {
+              res.end(`${user}: ${bar}`)
+            }
           )
-        )
+        })
       )
-    : next
+    )
+  )
 )
 
 export function authMiddleware<R, E>(routes: R.Routes<R & Has<AuthSession>, E>) {
