@@ -2,8 +2,8 @@ import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
-import * as Http from "./http"
-import * as Program from "./program"
+import * as Http from "../http"
+import * as Program from "../program/program"
 
 export const Live = pipe(
   Program.Live,
