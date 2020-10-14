@@ -15,7 +15,6 @@ import {
 import * as Db from "../src/db/Db"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
-import { restrictToPublic } from "../src/entry/restrictToPublic"
 import { CreateUser, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import { assertSuccess } from "./utils/assertions"
@@ -31,7 +30,6 @@ describe("Integration Suite", () => {
     L.using(PgPool.Live),
     L.using(PgConfigTest("integration")),
     L.using(TestContainersLive("integration")),
-    restrictToPublic,
     testRuntime
   )({
     open: 30_000,
