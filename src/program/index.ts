@@ -51,7 +51,7 @@ export const bar = R.route(({ req, res }, next) =>
 export function authMiddleware<R, E>(routes: R.Routes<R & Has<AuthSession>, E>) {
   return pipe(
     routes,
-    R.middleware((cont: R.RouteFn<R & Has<AuthSession>, E>) => (request, next) =>
+    R.middleware((cont) => (request, next) =>
       request.req.url === "/secret"
         ? T.fail<E | HTTPRouteException>(
             HTTPRouteException.build({
@@ -78,7 +78,7 @@ export function exceptionHandler<R, E>(routes: R.Routes<R, E>) {
             request.res.end(e.message)
             return T.unit
           } else {
-            return T.fail(e as Exclude<E, HTTPRouteException>)
+            return T.fail(<Exclude<E, HTTPRouteException>>e)
           }
         })
       )
