@@ -24,9 +24,10 @@ export function authenticated<R, E>(
     accessMaybeUserM(
       O.fold(
         () =>
-          T.effectTotal(() => {
-            request.res.statusCode = 401
-            request.res.end()
+          T.fail<HTTP.HTTPRouteException | E>({
+            _tag: "HTTPRouteException",
+            status: 403,
+            message: "Forbidden"
           }),
         (user) => body({ ...request, user })
       )
@@ -37,15 +38,10 @@ export function add<R, E>(routes: HTTP.Routes<R & Has<AuthSession>, E>) {
   return pipe(
     routes,
     HTTP.addMiddleware((cont) => (request, next) =>
-      request.req.url === "/secret"
-        ? T.fail<E | HTTP.HTTPRouteException>({
-            _tag: "HTTPRouteException",
-            message: "Forbidden!",
-            status: 403
-          })
-        : T.provideService(AuthSession)({ maybeUser: O.some("Michael") })(
-            cont(request, next)
-          )
+      T.provideService(AuthSession)({
+        maybeUser:
+          request.req.headers["authorization"] === "Secret" ? O.some("Michael") : O.none
+      })(cont(request, next))
     )
   )
 }
