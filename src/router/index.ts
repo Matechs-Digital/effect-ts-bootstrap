@@ -1,6 +1,8 @@
 import * as A from "@effect-ts/core/Classic/Array"
+import * as FA from "@effect-ts/core/Classic/FreeAssociative"
 import * as T from "@effect-ts/core/Effect"
 import { flow, pipe } from "@effect-ts/core/Function"
+import { AtomicReference } from "@effect-ts/system/Support/AtomicReference"
 
 import type { Request } from "../http"
 import { accessQueueM } from "../http"
@@ -12,9 +14,21 @@ export class Empty<R> {
 
 export type RouteFn<R> = (_: Request, next: T.UIO<void>) => T.RIO<R, void>
 
+export type MiddleFn<R> = (route: RouteFn<R>) => RouteFn<R>
+
+export class Middleware<R> {
+  constructor(readonly middle: MiddleFn<R>) {}
+}
+
 export class Route<R> {
   readonly _tag = "Route"
-  constructor(readonly route: RouteFn<R>) {}
+  constructor(
+    readonly route: RouteFn<R>,
+    readonly middlewares = FA.init<Middleware<any>>()
+  ) {}
+  middleware<R2 extends R = R>(): readonly Middleware<R2>[] {
+    return FA.toArray(this.middlewares)
+  }
 }
 
 export class Concat<R> {
@@ -31,6 +45,25 @@ export function route<R>(
     new Concat<R & R2>(self, new Route(route))
 }
 
+export function middleware<R2, R>(middle: (cont: RouteFn<R2>) => RouteFn<R>) {
+  return (self: Routes<R2>): Routes<R> => {
+    switch (self._tag) {
+      case "Empty": {
+        return self as any
+      }
+      case "Route": {
+        return new Route(
+          self.route,
+          FA.append(new Middleware(middle as any))(self.middlewares)
+        ) as any
+      }
+      case "Concat": {
+        return new Concat(middleware(middle)(self.left), middleware(middle)(self.right))
+      }
+    }
+  }
+}
+
 export type ProcessFn = (_: Request) => T.UIO<void>
 
 export function toArray<R>(_: Routes<R>): readonly RouteFn<R>[] {
@@ -39,6 +72,10 @@ export function toArray<R>(_: Routes<R>): readonly RouteFn<R>[] {
       return []
     }
     case "Route": {
+      const middlewares = _.middleware()
+      if (A.isNonEmpty(middlewares)) {
+        return [A.reduce_(middlewares, _.route, (b, m) => (r, n) => m.middle(b)(r, n))]
+      }
       return [_.route]
     }
     case "Concat": {
