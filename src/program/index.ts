@@ -4,10 +4,8 @@ import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
-import {
-  HTTPRouteException,
-  isHTTPRouteException
-} from "../exceptions/HTTPRouteException"
+import type { HTTPRouteException } from "../exceptions/HTTPRouteException"
+import { isHTTPRouteException } from "../exceptions/HTTPRouteException"
 import * as R from "../router"
 import { accessMaybeUserM, AuthSession } from "./AuthSession"
 import { accessBarM } from "./Bar"
@@ -53,13 +51,11 @@ export function authMiddleware<R, E>(routes: R.Routes<R & Has<AuthSession>, E>) 
     routes,
     R.middleware((cont) => (request, next) =>
       request.req.url === "/secret"
-        ? T.fail<E | HTTPRouteException>(
-            HTTPRouteException.build({
-              _tag: "HTTPRouteException",
-              message: "Forbidden!",
-              status: 403
-            })
-          )
+        ? T.fail<E | HTTPRouteException>({
+            _tag: "HTTPRouteException",
+            message: "Forbidden!",
+            status: 403
+          })
         : T.provideService(AuthSession)({ maybeUser: O.some("Michael") })(
             cont(request, next)
           )
