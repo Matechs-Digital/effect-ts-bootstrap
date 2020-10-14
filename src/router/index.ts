@@ -66,7 +66,6 @@ export function run<R>(_: Routes<R>) {
       accessQueueM((queue) =>
         pipe(queue.take, T.chain(flow(process, T.fork)), T.forever)
       )
-    ),
-    T.asUnit
+    )
   )
 }
