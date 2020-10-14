@@ -30,4 +30,4 @@ export const bar = R.route(({ req, res }, next) =>
     : next
 )
 
-export const Live = pipe(R.init, home, bar, R.run, T.as({}), L.fromRawEffect)
+export const Live = pipe(R.init, home, bar, R.run, L.fromRawEffect)
