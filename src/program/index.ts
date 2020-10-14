@@ -6,12 +6,12 @@ import { pipe } from "@effect-ts/core/Function"
 
 import type { HTTPRouteException } from "../exceptions/HTTPRouteException"
 import { isHTTPRouteException } from "../exceptions/HTTPRouteException"
-import * as R from "../router"
+import * as HTTP from "../http"
 import { accessMaybeUserM, AuthSession } from "./AuthSession"
 import { accessBarM } from "./Bar"
 import { accessFooM } from "./Foo"
 
-export const addHome = R.addRoute((r) => r.req.url === "/")(({ res }) =>
+export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
   accessFooM((foo) =>
     T.delay(200)(
       T.effectTotal(() => {
@@ -21,7 +21,7 @@ export const addHome = R.addRoute((r) => r.req.url === "/")(({ res }) =>
   )
 )
 
-export const addBar = R.addRoute((r) => r.req.url === "/bar")(({ res }) =>
+export const addBar = HTTP.addRoute((r) => r.req.url === "/bar")(({ res }) =>
   accessBarM((bar) =>
     accessMaybeUserM((maybeUser) =>
       T.delay(200)(
@@ -42,10 +42,10 @@ export const addBar = R.addRoute((r) => r.req.url === "/bar")(({ res }) =>
   )
 )
 
-export function addAuth<R, E>(routes: R.Routes<R & Has<AuthSession>, E>) {
+export function addAuth<R, E>(routes: HTTP.Routes<R & Has<AuthSession>, E>) {
   return pipe(
     routes,
-    R.addMiddleware((cont) => (request, next) =>
+    HTTP.addMiddleware((cont) => (request, next) =>
       request.req.url === "/secret"
         ? T.fail<E | HTTPRouteException>({
             _tag: "HTTPRouteException",
@@ -59,10 +59,10 @@ export function addAuth<R, E>(routes: R.Routes<R & Has<AuthSession>, E>) {
   )
 }
 
-export function addHandler<R, E>(routes: R.Routes<R, E>) {
+export function addHandler<R, E>(routes: HTTP.Routes<R, E>) {
   return pipe(
     routes,
-    R.addMiddleware((cont) => (request, next) =>
+    HTTP.addMiddleware((cont) => (request, next) =>
       T.catchAll_(cont(request, next), (e) =>
         T.suspend(() => {
           if (isHTTPRouteException(e)) {
@@ -78,6 +78,13 @@ export function addHandler<R, E>(routes: R.Routes<R, E>) {
   )
 }
 
-export const process = pipe(R.create, addHome, addBar, addAuth, addHandler, R.drain)
+export const process = pipe(
+  HTTP.create,
+  addHome,
+  addBar,
+  addAuth,
+  addHandler,
+  HTTP.drain
+)
 
-export const Live = L.fromRawEffect(process)
+export const LiveProgram = L.fromRawEffect(process)

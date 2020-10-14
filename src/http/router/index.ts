@@ -4,8 +4,8 @@ import * as T from "@effect-ts/core/Effect"
 import type { Predicate } from "@effect-ts/core/Function"
 import { flow, pipe } from "@effect-ts/core/Function"
 
-import type { Request } from "../http"
-import { accessQueueM } from "../http"
+import type { Request } from "../server"
+import { accessQueueM } from "../server"
 
 export class Empty<R, E> {
   readonly _R!: (_: R) => void
@@ -87,7 +87,7 @@ export function addMiddleware<R2, R, E, E2>(
 
 export type ProcessFn = (_: Request) => T.UIO<void>
 
-export function toArray<R, E>(_: Routes<R, E>): readonly RouteFn<R, E>[] {
+function toArray<R, E>(_: Routes<R, E>): readonly RouteFn<R, E>[] {
   switch (_._tag) {
     case "Empty": {
       return []
