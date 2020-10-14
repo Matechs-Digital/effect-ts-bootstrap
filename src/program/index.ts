@@ -30,8 +30,8 @@ export const bar = R.route(({ req, res }, next) =>
     : next
 )
 
-export const middle = <R>(routes: R.Routes<R>) =>
-  pipe(
+export function middle<R>(routes: R.Routes<R>) {
+  return pipe(
     routes,
     R.middleware((cont) => (request, next) =>
       request.req.url === "/middle"
@@ -41,5 +41,6 @@ export const middle = <R>(routes: R.Routes<R>) =>
         : cont(request, next)
     )
   )
+}
 
 export const Live = pipe(R.init, home, bar, middle, R.run, L.fromRawEffect)
