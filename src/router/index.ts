@@ -47,20 +47,19 @@ export function route<R2, E2, R, E>(
     new Concat(self, new Route(f as any) as any) as any
 }
 
-export function match(path: Predicate<string>) {
+export function addRoute(path: Predicate<Request>) {
   return <R, E>(f: (request: Request) => T.Effect<R, E, void>) => <R2, E2>(
     self: Routes<R2, E2>
   ): Routes<R & R2, E | E2> =>
     pipe(
       self,
       route(
-        (_, n): T.Effect<R & R2, E | E2, void> =>
-          _.req.url ? (path(_.req.url) ? f(_) : n) : n
+        (_, n): T.Effect<R & R2, E | E2, void> => (_.req.url ? (path(_) ? f(_) : n) : n)
       )
     )
 }
 
-export function middleware<R2, R, E, E2>(
+export function addMiddleware<R2, R, E, E2>(
   middle: (
     cont: RouteFn<R2, E2>
   ) => (_: Request, next: T.IO<E2, void>) => T.Effect<R, E, void>
@@ -77,7 +76,10 @@ export function middleware<R2, R, E, E2>(
         ) as any
       }
       case "Concat": {
-        return new Concat(middleware(middle)(self.left), middleware(middle)(self.right))
+        return new Concat(
+          addMiddleware(middle)(self.left),
+          addMiddleware(middle)(self.right)
+        )
       }
     }
   }
@@ -103,9 +105,9 @@ export function toArray<R, E>(_: Routes<R, E>): readonly RouteFn<R, E>[] {
   }
 }
 
-export const init: Routes<unknown, never> = new Empty()
+export const create: Routes<unknown, never> = new Empty()
 
-export function run<R>(_: Routes<R, never>) {
+export function drain<R>(_: Routes<R, never>) {
   const routes = toArray(_)
 
   const processFn = T.accessM((r: R) =>

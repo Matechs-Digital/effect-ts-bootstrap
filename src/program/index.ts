@@ -11,7 +11,7 @@ import { accessMaybeUserM, AuthSession } from "./AuthSession"
 import { accessBarM } from "./Bar"
 import { accessFooM } from "./Foo"
 
-export const home = R.match((url) => url === "/")(({ res }) =>
+export const addHome = R.addRoute((r) => r.req.url === "/")(({ res }) =>
   accessFooM((foo) =>
     T.delay(200)(
       T.effectTotal(() => {
@@ -21,7 +21,7 @@ export const home = R.match((url) => url === "/")(({ res }) =>
   )
 )
 
-export const bar = R.match((url) => url === "/bar")(({ res }) =>
+export const addBar = R.addRoute((r) => r.req.url === "/bar")(({ res }) =>
   accessBarM((bar) =>
     accessMaybeUserM((maybeUser) =>
       T.delay(200)(
@@ -42,10 +42,10 @@ export const bar = R.match((url) => url === "/bar")(({ res }) =>
   )
 )
 
-export function authMiddleware<R, E>(routes: R.Routes<R & Has<AuthSession>, E>) {
+export function addAuth<R, E>(routes: R.Routes<R & Has<AuthSession>, E>) {
   return pipe(
     routes,
-    R.middleware((cont) => (request, next) =>
+    R.addMiddleware((cont) => (request, next) =>
       request.req.url === "/secret"
         ? T.fail<E | HTTPRouteException>({
             _tag: "HTTPRouteException",
@@ -59,10 +59,10 @@ export function authMiddleware<R, E>(routes: R.Routes<R & Has<AuthSession>, E>) 
   )
 }
 
-export function exceptionHandler<R, E>(routes: R.Routes<R, E>) {
+export function addHandler<R, E>(routes: R.Routes<R, E>) {
   return pipe(
     routes,
-    R.middleware((cont) => (request, next) =>
+    R.addMiddleware((cont) => (request, next) =>
       T.catchAll_(cont(request, next), (e) =>
         T.suspend(() => {
           if (isHTTPRouteException(e)) {
@@ -78,12 +78,6 @@ export function exceptionHandler<R, E>(routes: R.Routes<R, E>) {
   )
 }
 
-export const Live = pipe(
-  R.init,
-  home,
-  bar,
-  authMiddleware,
-  exceptionHandler,
-  R.run,
-  L.fromRawEffect
-)
+export const process = pipe(R.create, addHome, addBar, addAuth, addHandler, R.drain)
+
+export const Live = L.fromRawEffect(process)
