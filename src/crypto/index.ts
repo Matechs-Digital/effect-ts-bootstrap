@@ -1,6 +1,4 @@
 import { has } from "@effect-ts/core/Classic/Has"
-import type { Option } from "@effect-ts/core/Classic/Option"
-import { none, some } from "@effect-ts/core/Classic/Option"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
@@ -29,6 +27,10 @@ export interface PBKDF2Config extends _config {}
 export const PBKDF2Config = has<PBKDF2Config>()
 
 export const PBKDF2ConfigLive = L.create(PBKDF2Config).pure(defaultConfig)
+export const PBKDF2ConfigTest = L.create(PBKDF2Config).pure({
+  ...defaultConfig,
+  iterations: 1
+})
 
 export const accessPBKDF2ConfigM = T.accessServiceM(PBKDF2Config)
 
