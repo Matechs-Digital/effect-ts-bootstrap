@@ -3,15 +3,17 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
+import * as PgPool from "../db/PgPool"
 import * as HTTP from "../http"
 import { App } from "../program"
 import { LiveBar } from "../program/Bar"
 import { LiveFoo } from "../program/Foo"
 import { TestContainersLive } from "./containers"
+import { PgConfigTest } from "./db"
 
 const Bootstrap = pipe(
   L.allPar(HTTP.Live, LiveFoo, LiveBar),
-  L.using(CryptoLive),
+  L.using(L.allPar(CryptoLive, PgPool.Live)),
   L.using(
     L.allPar(
       HTTP.config({
@@ -21,6 +23,7 @@ const Bootstrap = pipe(
       PBKDF2ConfigLive
     )
   ),
+  L.using(PgConfigTest("dev")),
   L.using(TestContainersLive("dev"))
 )
 
