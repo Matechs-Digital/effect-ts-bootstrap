@@ -6,7 +6,11 @@ import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import * as fc from "fast-check"
 
-import { createCredential, CredentialPersistenceLive } from "../src/api/credential"
+import {
+  createCredential,
+  CredentialPersistenceLive,
+  updateCredential
+} from "../src/api/credential"
 import { createUser, getUser, updateUser, UserPersistenceLive } from "../src/api/user"
 import { CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
 import * as Db from "../src/db/Db"
@@ -298,6 +302,29 @@ describe("Integration Suite", () => {
           T.done(result),
           T.map(hash.get),
           T.chain((_) => verifyPassword("helloworld000", _))
+        )
+      )
+
+      expect(verify).toEqual(Ex.unit)
+    })
+    it("update a credential", async () => {
+      const result = await runPromiseExit(
+        pipe(
+          updateCredential({ id: 1, userId: 105, password: "helloworld001" }),
+          Db.fromPool
+        )
+      )
+
+      const id = pipe(Credential.lens, Lens.prop("id"))
+      const hash = pipe(Credential.lens, Lens.prop("hash"))
+
+      expect(pipe(result, Ex.map(id.get))).toEqual(Ex.succeed(1))
+
+      const verify = await runPromiseExit(
+        pipe(
+          T.done(result),
+          T.map(hash.get),
+          T.chain((_) => verifyPassword("helloworld001", _))
         )
       )
 
