@@ -12,6 +12,7 @@ import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
 import { TestContainersLive } from "../src/dev/containers"
 import { PgConfigTest } from "../src/dev/db"
+import { TestMigrations } from "../src/dev/migrations"
 import { Credential, PasswordField } from "../src/model/credential"
 import { EmailField, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
@@ -27,7 +28,6 @@ import {
   UserPersistenceLive
 } from "../src/persistence/user"
 import { assertSuccess } from "./utils/assertions"
-import { TestMigrations } from "./utils/migrations"
 import { testRuntime } from "./utils/runtime"
 
 describe("Integration Suite", () => {
