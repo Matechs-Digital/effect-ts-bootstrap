@@ -6,15 +6,13 @@ import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import * as fc from "fast-check"
 
-import {
-  createUser,
-  getUser,
-  Live as UserPersistenceLive,
-  updateUser
-} from "../src/api/user"
+import { createCredential, CredentialPersistenceLive } from "../src/api/credential"
+import { createUser, getUser, updateUser, UserPersistenceLive } from "../src/api/user"
+import { CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
 import * as Db from "../src/db/Db"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
+import { Credential } from "../src/model/credential"
 import { CreateUser, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import { assertSuccess } from "./utils/assertions"
@@ -25,10 +23,10 @@ import { testRuntime } from "./utils/runtime"
 
 describe("Integration Suite", () => {
   const { runPromiseExit } = pipe(
-    L.allPar(UserPersistenceLive),
+    L.allPar(UserPersistenceLive, CredentialPersistenceLive),
     L.using(TestMigrations),
-    L.using(PgPool.Live),
-    L.using(PgConfigTest("integration")),
+    L.using(L.allPar(PgPool.Live, CryptoLive)),
+    L.using(L.allPar(PgConfigTest("integration"), PBKDF2ConfigTest)),
     L.using(TestContainersLive("integration")),
     testRuntime
   )({
@@ -85,6 +83,50 @@ describe("Integration Suite", () => {
             table_name: "users",
             column_name: "createdAt",
             data_type: "timestamp without time zone"
+          }
+        ])
+      )
+    })
+
+    it("check credentials table structure", async () => {
+      const response = await runPromiseExit(
+        pipe(
+          PgClient.accessM((client) =>
+            pipe(
+              T.fromPromiseDie(() =>
+                client.query(
+                  "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
+                  ["credentials"]
+                )
+              ),
+              T.map((_) => _.rows)
+            )
+          ),
+          PgClient.provide
+        )
+      )
+
+      expect(response).toEqual(
+        Ex.succeed([
+          {
+            column_name: "id",
+            data_type: "integer",
+            table_name: "credentials"
+          },
+          {
+            column_name: "userId",
+            data_type: "integer",
+            table_name: "credentials"
+          },
+          {
+            column_name: "hash",
+            data_type: "text",
+            table_name: "credentials"
+          },
+          {
+            column_name: "createdAt",
+            data_type: "timestamp without time zone",
+            table_name: "credentials"
           }
         ])
       )
@@ -237,6 +279,29 @@ describe("Integration Suite", () => {
       )
 
       expect(result).toEqual(Ex.succeed("NewEmail@example.org"))
+    })
+  })
+
+  describe("Credential Api", () => {
+    it("creates a credential", async () => {
+      const result = await runPromiseExit(
+        pipe(createCredential({ userId: 105, password: "helloworld000" }), Db.fromPool)
+      )
+
+      const id = pipe(Credential.lens, Lens.prop("id"))
+      const hash = pipe(Credential.lens, Lens.prop("hash"))
+
+      expect(pipe(result, Ex.map(id.get))).toEqual(Ex.succeed(1))
+
+      const verify = await runPromiseExit(
+        pipe(
+          T.done(result),
+          T.map(hash.get),
+          T.chain((_) => verifyPassword("helloworld000", _))
+        )
+      )
+
+      expect(verify).toEqual(Ex.unit)
     })
   })
 })

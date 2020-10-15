@@ -10,13 +10,12 @@ export function up(pgm: MigrationBuilder) {
       primaryKey: true
     },
     userId: {
-      type: "BIGSERIAL",
+      type: "SERIAL",
       notNull: true,
       references: '"users"',
       onDelete: "CASCADE"
     },
-    password: { type: "text", notNull: true },
-    salt: { type: "text", notNull: true },
+    hash: { type: "text", notNull: true },
     createdAt: {
       type: "timestamp",
       notNull: true,

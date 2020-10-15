@@ -55,7 +55,9 @@ export interface UserPersistence extends ReturnType<typeof makeUserPersistence> 
 
 export const UserPersistence = has<UserPersistence>()
 
-export const Live = L.fromConstructor(UserPersistence)(makeUserPersistence)()
+export const UserPersistenceLive = L.fromConstructor(UserPersistence)(
+  makeUserPersistence
+)()
 
 export const { createUser, getUser, updateUser } = T.deriveLifted(UserPersistence)(
   ["createUser", "updateUser", "getUser"],

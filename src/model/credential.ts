@@ -8,7 +8,7 @@ import { fail } from "@effect-ts/morphic/Decoder/common"
 import { encoder } from "@effect-ts/morphic/Encoder"
 import { strictDecoder } from "@effect-ts/morphic/StrictDecoder"
 
-import { Common, commonErrorIds, Id } from "./common"
+import { Common, commonErrorIds, Id, UserId } from "./common"
 import { validation } from "./validation"
 
 export const credentialErrorIds = {
@@ -17,31 +17,34 @@ export const credentialErrorIds = {
 }
 
 const CreateCredential_ = make((F) =>
-  F.interface({
-    email: F.string({
-      conf: {
-        [FastCheckURI]: (_, { module: fc }) =>
-          fc.string({ minLength: 8, maxLength: 32 }),
-        [DecoderURI]: (_) => ({
-          decode: flow(
-            _.decode,
-            S.chain((s) =>
-              s.length > 8 && s.length <= 32
-                ? S.succeed(s)
-                : fail([
-                    {
-                      actual: s,
-                      id: credentialErrorIds.password_length,
-                      name: "password",
-                      message: "password should be have between 8 and 32 characters"
-                    }
-                  ])
+  F.intersection([
+    UserId(F),
+    F.interface({
+      password: F.string({
+        conf: {
+          [FastCheckURI]: (_, { module: fc }) =>
+            fc.string({ minLength: 8, maxLength: 32 }),
+          [DecoderURI]: (_) => ({
+            decode: flow(
+              _.decode,
+              S.chain((s) =>
+                s.length > 8 && s.length <= 32
+                  ? S.succeed(s)
+                  : fail([
+                      {
+                        actual: s,
+                        id: credentialErrorIds.password_length,
+                        name: "password",
+                        message: "password should be have between 8 and 32 characters"
+                      }
+                    ])
+              )
             )
-          )
-        })
-      }
+          })
+        }
+      })
     })
-  })
+  ])
 )
 
 export interface CreateCredential extends AType<typeof CreateCredential_> {}
@@ -53,8 +56,7 @@ export const CreateCredential = opaque<CreateCredentialRaw, CreateCredential>()(
 
 const CredentialHash_ = make((F) =>
   F.interface({
-    password: F.string(),
-    salt: F.string()
+    hash: F.string()
   })
 )
 
@@ -72,10 +74,23 @@ export interface CredentialRaw extends EType<typeof Credential_> {}
 
 export const Credential = opaque<CredentialRaw, Credential>()(Credential_)
 
-export const decodecredential = strictDecoder(Credential).decode
-export const encodecredential = encoder(Credential).encode
-export const encodeCreatecredential = encoder(CreateCredential).encode
-export const decodeCreatecredential = strictDecoder(CreateCredential).decode
+const UpdateCredential_ = make((F) =>
+  F.intersection([Id(F), UserId(F), CreateCredential(F)])
+)
+
+export interface UpdateCredential extends AType<typeof UpdateCredential_> {}
+export interface UpdateCredentialRaw extends EType<typeof UpdateCredential_> {}
+
+export const UpdateCredential = opaque<UpdateCredentialRaw, UpdateCredential>()(
+  UpdateCredential_
+)
+
+export const decodeCredential = strictDecoder(Credential).decode
+export const encodeCredential = encoder(Credential).encode
+export const decodeUpdateCredential = strictDecoder(UpdateCredential).decode
+export const encodeUpdateCredential = encoder(UpdateCredential).encode
+export const encodeCreateCredential = encoder(CreateCredential).encode
+export const decodeCreateCredential = strictDecoder(CreateCredential).decode
 
 export const credentialErrors = (_: DecodingError) =>
   _.id != null &&
@@ -86,5 +101,5 @@ export const credentialErrors = (_: DecodingError) =>
     : O.none
 
 export const validateCredential = validation(Credential, credentialErrors)
-
-export const validateCreatecredential = validation(CreateCredential, credentialErrors)
+export const validateUpdateCredential = validation(UpdateCredential, credentialErrors)
+export const validateCreateCredential = validation(CreateCredential, credentialErrors)

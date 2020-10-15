@@ -69,3 +69,14 @@ export interface Common extends AType<typeof Common_> {}
 export interface CommonRaw extends EType<typeof Common_> {}
 
 export const Common = opaque<CommonRaw, Common>()(Common_)
+
+const UserId_ = make((F) =>
+  F.interface({
+    userId: F.number()
+  })
+)
+
+export interface UserId extends AType<typeof UserId_> {}
+export interface UserIdRaw extends EType<typeof UserId_> {}
+
+export const UserId = opaque<UserIdRaw, UserId>()(UserId_)
