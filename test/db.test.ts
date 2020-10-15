@@ -6,12 +6,6 @@ import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import * as fc from "fast-check"
 
-import {
-  createCredential,
-  CredentialPersistenceLive,
-  updateCredential
-} from "../src/api/credential"
-import { createUser, getUser, updateUser, UserPersistenceLive } from "../src/api/user"
 import { CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
 import * as Db from "../src/db/Db"
 import * as PgClient from "../src/db/PgClient"
@@ -19,6 +13,17 @@ import * as PgPool from "../src/db/PgPool"
 import { Credential, PasswordField } from "../src/model/credential"
 import { EmailField, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
+import {
+  createCredential,
+  CredentialPersistenceLive,
+  updateCredential
+} from "../src/persistence/credential"
+import {
+  createUser,
+  getUser,
+  updateUser,
+  UserPersistenceLive
+} from "../src/persistence/user"
 import { assertSuccess } from "./utils/assertions"
 import { TestContainersLive } from "./utils/containers"
 import { PgConfigTest } from "./utils/db"
