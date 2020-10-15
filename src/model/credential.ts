@@ -27,7 +27,7 @@ const Password_ = make((F) =>
           decode: flow(
             _.decode,
             S.chain((s) =>
-              s.length > 8 && s.length <= 32
+              s.length >= 8 && s.length <= 32
                 ? S.succeed(s)
                 : fail([
                     {

@@ -13,7 +13,8 @@ import { validation } from "./validation"
 
 export const userErrorIds = {
   ...commonErrorIds,
-  email_length: "email_length"
+  email_length: "email_length",
+  user_id_negative: "user_id_negative"
 }
 
 const CreateUser_ = make((F) =>
@@ -71,7 +72,28 @@ export const validateCreateUser = validation(CreateUser, userErrors)
 
 const UserId_ = make((F) =>
   F.interface({
-    userId: F.number()
+    userId: F.number({
+      conf: {
+        [FastCheckURI]: (_, { module: fc }) => fc.integer(1, 1000000),
+        [DecoderURI]: (_) => ({
+          decode: flow(
+            _.decode,
+            S.chain((s) =>
+              s > 0
+                ? S.succeed(s)
+                : fail([
+                    {
+                      actual: s,
+                      id: userErrorIds.user_id_negative,
+                      name: "userId",
+                      message: "userId should be between 0 and 255 characters long"
+                    }
+                  ])
+            )
+          )
+        })
+      }
+    })
   })
 )
 

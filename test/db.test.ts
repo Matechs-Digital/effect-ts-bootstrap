@@ -16,7 +16,7 @@ import { CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
 import * as Db from "../src/db/Db"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
-import { Credential } from "../src/model/credential"
+import { CreateCredential, Credential, Password } from "../src/model/credential"
 import { CreateUser, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import { assertSuccess } from "./utils/assertions"
@@ -170,35 +170,6 @@ describe("Integration Suite", () => {
       )
     })
 
-    it("create arbitrary users", () =>
-      fc.assert(
-        fc.asyncProperty(arbitrary(CreateUser), async (_) => {
-          const result = await runPromiseExit(
-            pipe(createUser(_), T.as(true), Db.fromPool)
-          )
-
-          expect(result).toEqual(Ex.succeed(true))
-        }),
-        { endOnFailure: true, timeout: 1000 }
-      ))
-
-    it("find users created from previous steps", async () => {
-      const response = await runPromiseExit(
-        pipe(
-          PgClient.accessM((client) =>
-            pipe(
-              T.fromPromiseDie(() => client.query("SELECT COUNT(*) FROM users")),
-              T.map((_) => parseInt(_.rows[0].count))
-            )
-          ),
-          PgClient.provide
-        )
-      )
-
-      assertSuccess(response)
-      expect(response.value).toBeGreaterThan(10)
-    })
-
     it("transactional dsl handles success/failure with commit/rollback", async () => {
       const result = await runPromiseExit(
         pipe(
@@ -245,9 +216,9 @@ describe("Integration Suite", () => {
 
       assertSuccess(resultSuccess)
       expect(resultSuccess.value.map((_) => [_.email, _.id])).toEqual([
-        ["USER_0@example.org", 105],
-        ["USER_1@example.org", 106],
-        ["USER_2@example.org", 107]
+        ["USER_0@example.org", 5],
+        ["USER_1@example.org", 6],
+        ["USER_2@example.org", 7]
       ])
 
       const countSuccess = await runPromiseExit(
@@ -271,7 +242,7 @@ describe("Integration Suite", () => {
     it("get user", async () => {
       const result = await runPromiseExit(
         pipe(
-          getUser({ id: 105 }),
+          getUser({ id: 5 }),
           T.map((_) => _.email),
           Db.fromPool
         )
@@ -299,7 +270,7 @@ describe("Integration Suite", () => {
   describe("Credential Api", () => {
     it("creates a credential", async () => {
       const result = await runPromiseExit(
-        pipe(createCredential({ userId: 105, password: "helloworld000" }), Db.fromPool)
+        pipe(createCredential({ userId: 5, password: "helloworld000" }), Db.fromPool)
       )
 
       const id = pipe(Credential.lens, Lens.prop("id"))
@@ -341,5 +312,32 @@ describe("Integration Suite", () => {
 
       expect(verify).toEqual(Ex.unit)
     })
+  })
+
+  describe("Generative", () => {
+    it("create arbitrary users with credentials", () =>
+      fc.assert(
+        fc.asyncProperty(
+          arbitrary(CreateUser),
+          arbitrary(Password),
+          async (_, { password }) => {
+            const verify = await runPromiseExit(
+              pipe(
+                createUser(_),
+                T.chain((u) =>
+                  createCredential({
+                    password,
+                    userId: u.id
+                  })
+                ),
+                Db.fromPool,
+                T.chain((_) => verifyPassword(password, _.hash))
+              )
+            )
+            expect(pipe(verify)).toEqual(Ex.unit)
+          }
+        ),
+        { endOnFailure: true, timeout: 1000 }
+      ))
   })
 })
