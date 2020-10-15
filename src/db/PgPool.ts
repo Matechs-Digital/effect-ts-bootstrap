@@ -25,7 +25,7 @@ export function withPoolClientM<R, E, A>(
   return T.accessServiceM(PgPool)((_) => _.withPoolClientM(body))
 }
 
-export const Live = pipe(
+export const PgPoolLive = pipe(
   withConfig((_) => new PG.Pool(_)),
   M.make((_) => T.fromPromiseDie(() => _.end())),
   M.map(

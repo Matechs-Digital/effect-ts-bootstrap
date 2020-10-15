@@ -34,7 +34,7 @@ describe("Integration Suite", () => {
   const { runPromiseExit } = pipe(
     L.allPar(UserPersistenceLive, CredentialPersistenceLive),
     L.using(TestMigrations),
-    L.using(L.allPar(PgPool.Live, CryptoLive)),
+    L.using(L.allPar(PgPool.PgPoolLive, CryptoLive)),
     L.using(L.allPar(PgConfigTest("integration"), PBKDF2ConfigTest)),
     L.using(TestContainersLive("integration")),
     testRuntime
