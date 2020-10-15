@@ -21,7 +21,7 @@ export const makeUserPersistence = () => ({
   getUser: flow(
     validateId,
     T.chain(encodeId),
-    T.chain(({ id }) => query(`SELECT * FROM users WHERE id = $1::bigint`, id)),
+    T.chain(({ id }) => query(`SELECT * FROM users WHERE id = $1::integer`, id)),
     T.chain((_) =>
       _.rows.length > 0 ? T.succeed(_.rows[0]) : T.fail(new UserNotFound())
     ),
