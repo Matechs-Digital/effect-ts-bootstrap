@@ -16,8 +16,8 @@ import { CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
 import * as Db from "../src/db/Db"
 import * as PgClient from "../src/db/PgClient"
 import * as PgPool from "../src/db/PgPool"
-import { Credential, Password } from "../src/model/credential"
-import { CreateUser, User } from "../src/model/user"
+import { Credential, PasswordField } from "../src/model/credential"
+import { EmailField, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import { assertSuccess } from "./utils/assertions"
 import { TestContainersLive } from "./utils/containers"
@@ -318,12 +318,12 @@ describe("Integration Suite", () => {
     it("create arbitrary users with credentials", () =>
       fc.assert(
         fc.asyncProperty(
-          arbitrary(CreateUser),
-          arbitrary(Password),
-          async (_, { password }) => {
+          arbitrary(EmailField),
+          arbitrary(PasswordField),
+          async ({ email }, { password }) => {
             const verify = await runPromiseExit(
               pipe(
-                createUser(_),
+                createUser({ email }),
                 T.chain((u) =>
                   createCredential({
                     password,

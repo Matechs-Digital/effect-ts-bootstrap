@@ -9,7 +9,7 @@ import { encoder } from "@effect-ts/morphic/Encoder"
 import { strictDecoder } from "@effect-ts/morphic/StrictDecoder"
 
 import { Common, commonErrorIds, Id } from "./common"
-import { UserId } from "./user"
+import { UserIdField } from "./user"
 import { validation } from "./validation"
 
 export const credentialErrorIds = {
@@ -17,7 +17,7 @@ export const credentialErrorIds = {
   password_length: "password_length"
 }
 
-const Password_ = make((F) =>
+const PasswordField_ = make((F) =>
   F.interface({
     password: F.string({
       conf: {
@@ -45,12 +45,14 @@ const Password_ = make((F) =>
   })
 )
 
-export interface Password extends AType<typeof Password_> {}
-export interface PasswordRaw extends EType<typeof Password_> {}
+export interface PasswordField extends AType<typeof PasswordField_> {}
+export interface PasswordFieldRaw extends EType<typeof PasswordField_> {}
 
-export const Password = opaque<PasswordRaw, Password>()(Password_)
+export const PasswordField = opaque<PasswordFieldRaw, PasswordField>()(PasswordField_)
 
-const CreateCredential_ = make((F) => F.intersection([UserId(F), Password(F)]))
+const CreateCredential_ = make((F) =>
+  F.intersection([UserIdField(F), PasswordField(F)])
+)
 
 export interface CreateCredential extends AType<typeof CreateCredential_> {}
 export interface CreateCredentialRaw extends EType<typeof CreateCredential_> {}

@@ -17,7 +17,7 @@ export const userErrorIds = {
   user_id_negative: "user_id_negative"
 }
 
-const CreateUser_ = make((F) =>
+const EmailField_ = make((F) =>
   F.interface({
     email: F.string({
       conf: {
@@ -45,12 +45,19 @@ const CreateUser_ = make((F) =>
   })
 )
 
+export interface EmailField extends AType<typeof EmailField_> {}
+export interface EmailFieldRaw extends EType<typeof EmailField_> {}
+
+export const EmailField = opaque<EmailFieldRaw, EmailField>()(EmailField_)
+
+const CreateUser_ = make((F) => F.intersection([EmailField(F)]))
+
 export interface CreateUser extends AType<typeof CreateUser_> {}
 export interface CreateUserRaw extends EType<typeof CreateUser_> {}
 
 export const CreateUser = opaque<CreateUserRaw, CreateUser>()(CreateUser_)
 
-const User_ = make((F) => F.intersection([Id(F), CreateUser(F), Common(F)]))
+const User_ = make((F) => F.intersection([Id(F), EmailField(F), Common(F)]))
 
 export interface User extends AType<typeof User_> {}
 export interface UserRaw extends EType<typeof User_> {}
@@ -70,7 +77,7 @@ export const userErrors = (_: DecodingError) =>
 export const validateUser = validation(User, userErrors)
 export const validateCreateUser = validation(CreateUser, userErrors)
 
-const UserId_ = make((F) =>
+export const UserIdField = make((F) =>
   F.interface({
     userId: F.number({
       conf: {
@@ -96,8 +103,3 @@ const UserId_ = make((F) =>
     })
   })
 )
-
-export interface UserId extends AType<typeof UserId_> {}
-export interface UserIdRaw extends EType<typeof UserId_> {}
-
-export const UserId = opaque<UserIdRaw, UserId>()(UserId_)
