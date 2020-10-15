@@ -30,8 +30,8 @@ export const makeUserPersistence = () => ({
   createUser: flow(
     validateCreateUser,
     T.chain(encodeCreateUser),
-    T.chain(({ name }) =>
-      query(`INSERT INTO users (name) VALUES ($1::text) RETURNING *`, name)
+    T.chain(({ email }) =>
+      query(`INSERT INTO users (email) VALUES ($1::text) RETURNING *`, email)
     ),
     T.map((_) => _.rows[0]),
     T.chain(flow(decodeUser, T.orDie))
@@ -39,10 +39,10 @@ export const makeUserPersistence = () => ({
   updateUser: flow(
     validateUser,
     T.chain(encodeUser),
-    T.chain(({ id, name }) =>
+    T.chain(({ email, id }) =>
       query(
-        `UPDATE users SET name = $1::text WHERE id = $2::bigint RETURNING *`,
-        name,
+        `UPDATE users SET email = $1::text WHERE id = $2::bigint RETURNING *`,
+        email,
         id
       )
     ),

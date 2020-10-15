@@ -10,15 +10,15 @@ it("decodes user", () => {
     T.runEither(
       decodeUser({
         createdAt: "2020-10-10T14:50:17.184Z",
-        id: "1",
-        name: "Michael"
+        id: 1,
+        email: "ma@example.org"
       })
     )
   ).toEqual(
     right({
       createdAt: new Date("2020-10-10T14:50:17.184Z"),
-      id: BigInt(1),
-      name: "Michael"
+      id: 1,
+      email: "ma@example.org"
     })
   )
 })
@@ -36,7 +36,7 @@ it("decodes id", () => {
         {
           actual: "bla",
           id: "bad_id_format",
-          message: "id should be a big integer encoded as a string",
+          message: "id should be an integer",
           name: "id"
         }
       ])

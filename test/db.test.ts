@@ -75,10 +75,10 @@ describe("Integration Suite", () => {
 
       expect(response).toEqual(
         Ex.succeed([
-          { table_name: "users", column_name: "id", data_type: "bigint" },
+          { table_name: "users", column_name: "id", data_type: "integer" },
           {
             table_name: "users",
-            column_name: "name",
+            column_name: "email",
             data_type: "text"
           },
           {
@@ -89,66 +89,28 @@ describe("Integration Suite", () => {
         ])
       )
     })
-
-    it("check posts table structure", async () => {
-      const response = await runPromiseExit(
-        pipe(
-          PgClient.accessM((client) =>
-            pipe(
-              T.fromPromiseDie(() =>
-                client.query(
-                  "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
-                  ["posts"]
-                )
-              ),
-              T.map((_) => _.rows)
-            )
-          ),
-          PgClient.provide
-        )
-      )
-
-      assertSuccess(response)
-
-      expect(response.value).toEqual([
-        { table_name: "posts", column_name: "id", data_type: "bigint" },
-        {
-          table_name: "posts",
-          column_name: "userId",
-          data_type: "bigint"
-        },
-        {
-          table_name: "posts",
-          column_name: "body",
-          data_type: "text"
-        },
-        {
-          column_name: "createdAt",
-          data_type: "timestamp without time zone",
-          table_name: "posts"
-        }
-      ])
-    })
   })
 
   describe("User Api", () => {
     it("creates a new user", async () => {
       const result = await runPromiseExit(
-        pipe(createUser({ name: "Michael" }), Db.fromPool)
+        pipe(createUser({ email: "ma@example.org" }), Db.fromPool)
       )
 
-      const nameAndId = pipe(User.lens, Lens.props("name", "id"))
+      const nameAndId = pipe(User.lens, Lens.props("email", "id"))
 
       expect(pipe(result, Ex.map(nameAndId.get))).toEqual(
-        Ex.succeed({ id: BigInt(1), name: "Michael" })
+        Ex.succeed({ id: 1, email: "ma@example.org" })
       )
     })
 
     it("fail to create a new user with an empty name", async () => {
-      const result = await runPromiseExit(pipe(createUser({ name: "" }), Db.fromPool))
+      const result = await runPromiseExit(pipe(createUser({ email: "" }), Db.fromPool))
 
       expect(result).toEqual(
-        Ex.fail(new ValidationError("name should be between 0 and 255 characters long"))
+        Ex.fail(
+          new ValidationError("email should be between 0 and 255 characters long")
+        )
       )
     })
 
@@ -185,9 +147,9 @@ describe("Integration Suite", () => {
       const result = await runPromiseExit(
         pipe(
           T.tuple(
-            createUser({ name: "USER_0" }),
-            createUser({ name: "USER_1" }),
-            createUser({ name: "USER_2" })
+            createUser({ email: "USER_0@example.org" }),
+            createUser({ email: "USER_1@example.org" }),
+            createUser({ email: "USER_2@example.org" })
           ),
           T.tap(() => T.fail("error")),
           Db.transaction,
@@ -202,7 +164,7 @@ describe("Integration Suite", () => {
           PgClient.accessM((client) =>
             pipe(
               T.fromPromiseDie(() =>
-                client.query("SELECT COUNT(*) FROM users WHERE name LIKE 'USER_%'")
+                client.query("SELECT COUNT(*) FROM users WHERE email LIKE 'USER_%'")
               ),
               T.map((_) => parseInt(_.rows[0].count))
             )
@@ -216,9 +178,9 @@ describe("Integration Suite", () => {
       const resultSuccess = await runPromiseExit(
         pipe(
           T.tuple(
-            createUser({ name: "USER_0" }),
-            createUser({ name: "USER_1" }),
-            createUser({ name: "USER_2" })
+            createUser({ email: "USER_0@example.org" }),
+            createUser({ email: "USER_1@example.org" }),
+            createUser({ email: "USER_2@example.org" })
           ),
           Db.transaction,
           Db.fromPool
@@ -226,10 +188,10 @@ describe("Integration Suite", () => {
       )
 
       assertSuccess(resultSuccess)
-      expect(resultSuccess.value.map((_) => [_.name, _.id])).toEqual([
-        ["USER_0", BigInt(105)],
-        ["USER_1", BigInt(106)],
-        ["USER_2", BigInt(107)]
+      expect(resultSuccess.value.map((_) => [_.email, _.id])).toEqual([
+        ["USER_0@example.org", 105],
+        ["USER_1@example.org", 106],
+        ["USER_2@example.org", 107]
       ])
 
       const countSuccess = await runPromiseExit(
@@ -237,7 +199,7 @@ describe("Integration Suite", () => {
           PgClient.accessM((client) =>
             pipe(
               T.fromPromiseDie(() =>
-                client.query("SELECT COUNT(*) FROM users WHERE name LIKE 'USER_%'")
+                client.query("SELECT COUNT(*) FROM users WHERE email LIKE 'USER_%'")
               ),
               T.map((_) => parseInt(_.rows[0].count))
             )
@@ -253,28 +215,28 @@ describe("Integration Suite", () => {
     it("get user", async () => {
       const result = await runPromiseExit(
         pipe(
-          getUser({ id: BigInt(105) }),
-          T.map((_) => _.name),
+          getUser({ id: 105 }),
+          T.map((_) => _.email),
           Db.fromPool
         )
       )
 
-      expect(result).toEqual(Ex.succeed("USER_0"))
+      expect(result).toEqual(Ex.succeed("USER_0@example.org"))
     })
 
     it("creates and updates user", async () => {
       const result = await runPromiseExit(
         pipe(
           createUser({
-            name: "OldName"
+            email: "OldName"
           }),
-          T.chain((user) => updateUser({ ...user, name: "NewName" })),
-          T.map((_) => _.name),
+          T.chain((user) => updateUser({ ...user, email: "NewEmail@example.org" })),
+          T.map((_) => _.email),
           Db.fromPool
         )
       )
 
-      expect(result).toEqual(Ex.succeed("NewName"))
+      expect(result).toEqual(Ex.succeed("NewEmail@example.org"))
     })
   })
 })

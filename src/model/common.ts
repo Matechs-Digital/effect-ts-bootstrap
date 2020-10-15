@@ -16,7 +16,7 @@ export const commonErrorIds = {
 
 const Id_ = make((F) =>
   F.interface({
-    id: F.bigint({
+    id: F.number({
       conf: {
         [DecoderURI]: (_) => ({
           decode: (u) =>
@@ -28,7 +28,7 @@ const Id_ = make((F) =>
                     actual: u,
                     id: commonErrorIds.bad_id_format,
                     name: "id",
-                    message: "id should be a big integer encoded as a string"
+                    message: "id should be an integer"
                   }
                 ])
               )

@@ -13,12 +13,12 @@ import { validation } from "./validation"
 
 export const userErrorIds = {
   ...commonErrorIds,
-  user_name_length: "user_name_length"
+  email_length: "email_length"
 }
 
 const CreateUser_ = make((F) =>
   F.interface({
-    name: F.string({
+    email: F.string({
       conf: {
         [FastCheckURI]: (_, { module: fc }) =>
           fc.string({ minLength: 1, maxLength: 255 }),
@@ -31,9 +31,9 @@ const CreateUser_ = make((F) =>
                 : fail([
                     {
                       actual: s,
-                      id: userErrorIds.user_name_length,
-                      name: "name",
-                      message: "name should be between 0 and 255 characters long"
+                      id: userErrorIds.email_length,
+                      name: "email",
+                      message: "email should be between 0 and 255 characters long"
                     }
                   ])
             )
