@@ -30,18 +30,10 @@ export const addBar = HTTP.addRoute((r) => r.req.url === "/bar")(
   )
 )
 
-export const App = pipe(
-  HTTP.create,
-  addHome,
-  addBar,
-  Auth.add,
-  HTTP.drain,
-  L.fromRawEffect
-)
+export const App = pipe(HTTP.create, addHome, addBar, Auth.add, HTTP.drain)
 
 export const Bootstrap = pipe(
-  App,
-  L.using(L.allPar(HTTP.Live, LiveFoo, LiveBar)),
+  L.allPar(HTTP.Live, LiveFoo, LiveBar),
   L.using(
     L.allPar(
       HTTP.config({
@@ -55,5 +47,5 @@ export const Bootstrap = pipe(
 
 // main function (unsafe)
 export function main() {
-  return pipe(T.never, T.provideSomeLayer(Bootstrap), T.runMain)
+  return pipe(App, T.provideSomeLayer(Bootstrap), T.runMain)
 }
