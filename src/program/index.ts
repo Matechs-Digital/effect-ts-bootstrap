@@ -2,6 +2,7 @@ import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
+import { PBKDF2ConfigLive } from "../crypto"
 import * as HTTP from "../http"
 import { accessBarM, LiveBar } from "../program/Bar"
 import { accessFooM, LiveFoo } from "../program/Foo"
@@ -42,10 +43,13 @@ export const Bootstrap = pipe(
   App,
   L.using(L.allPar(HTTP.Live, LiveFoo, LiveBar)),
   L.using(
-    HTTP.config({
-      host: "0.0.0.0",
-      port: 8081
-    })
+    L.allPar(
+      HTTP.config({
+        host: "0.0.0.0",
+        port: 8081
+      }),
+      PBKDF2ConfigLive
+    )
   )
 )
 
