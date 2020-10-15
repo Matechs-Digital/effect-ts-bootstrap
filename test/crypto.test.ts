@@ -14,7 +14,7 @@ describe("Crypto Suite", () => {
   describe("Live", () => {
     const { runPromise, runPromiseExit } = pipe(PBKDF2ConfigLive, testRuntime)()
 
-    it("should encode and verify password", async () => {
+    it("should hash and verify password", async () => {
       const password = "wuihfjierngjkrnjgwrgn"
       const hash = await runPromise(hashPassword(password))
       const verify = await runPromiseExit(verifyPassword(password, hash))
@@ -22,7 +22,7 @@ describe("Crypto Suite", () => {
       expect(verify).toEqual(Ex.unit)
     })
 
-    it("should encode and not verify password", async () => {
+    it("should hash and not verify password", async () => {
       const password = "wuihfjierngjkrnjgwrgn"
       const passwordBad = "wuIhfjierngjkrnjgwrgn"
       const hash = await runPromise(hashPassword(password))
@@ -34,7 +34,7 @@ describe("Crypto Suite", () => {
   describe("Test", () => {
     const { runPromise, runPromiseExit } = pipe(PBKDF2ConfigTest, testRuntime)()
 
-    it("should encode and verify password", async () => {
+    it("should hash and verify password", async () => {
       const password = "wuihfjierngjkrnjgwrgn"
       const hash = await runPromise(hashPassword(password))
       const verify = await runPromiseExit(verifyPassword(password, hash))
@@ -42,7 +42,7 @@ describe("Crypto Suite", () => {
       expect(verify).toEqual(Ex.unit)
     })
 
-    it("should encode and not verify password", async () => {
+    it("should hash and not verify password", async () => {
       const password = "wuihfjierngjkrnjgwrgn"
       const passwordBad = "wuIhfjierngjkrnjgwrgn"
       const hash = await runPromise(hashPassword(password))
