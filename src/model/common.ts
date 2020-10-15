@@ -1,10 +1,11 @@
 import * as O from "@effect-ts/core/Classic/Option"
 import * as S from "@effect-ts/core/Classic/Sync"
+import type { Endomorphism } from "@effect-ts/core/Function"
 import { pipe } from "@effect-ts/core/Function"
 import type { AType, EType } from "@effect-ts/morphic"
 import { DecoderURI, make, opaque } from "@effect-ts/morphic"
 import { decoder } from "@effect-ts/morphic/Decoder"
-import type { DecodingError } from "@effect-ts/morphic/Decoder/common"
+import type { Decoder, DecodingError } from "@effect-ts/morphic/Decoder/common"
 import { fail } from "@effect-ts/morphic/Decoder/common"
 import { encoder } from "@effect-ts/morphic/Encoder"
 
@@ -53,13 +54,20 @@ export const encodeId = encoder(Id).encode
 export const decodeId = decoder(Id).decode
 export const validateId = validation(Id, commonErrors)
 
+const dateDecoderConfig: Endomorphism<Decoder<Date>> = (_) => ({
+  decode: (u) => (u instanceof Date ? S.succeed(u) : _.decode(u))
+})
+
 const Common_ = make((F) =>
   F.interface({
     createdAt: F.date({
       conf: {
-        [DecoderURI]: (_) => ({
-          decode: (u) => (u instanceof Date ? S.succeed(u) : _.decode(u))
-        })
+        [DecoderURI]: dateDecoderConfig
+      }
+    }),
+    updatedAt: F.date({
+      conf: {
+        [DecoderURI]: dateDecoderConfig
       }
     })
   })

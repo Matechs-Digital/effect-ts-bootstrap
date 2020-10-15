@@ -87,6 +87,11 @@ describe("Integration Suite", () => {
             table_name: "users",
             column_name: "createdAt",
             data_type: "timestamp without time zone"
+          },
+          {
+            table_name: "users",
+            column_name: "updatedAt",
+            data_type: "timestamp without time zone"
           }
         ])
       )
@@ -131,6 +136,11 @@ describe("Integration Suite", () => {
             column_name: "createdAt",
             data_type: "timestamp without time zone",
             table_name: "credentials"
+          },
+          {
+            table_name: "credentials",
+            column_name: "updatedAt",
+            data_type: "timestamp without time zone"
           }
         ])
       )
