@@ -1,7 +1,6 @@
 import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
-import { pipe } from "@effect-ts/core/Function"
 import * as crypto from "crypto"
 
 // larger numbers mean better security, less
@@ -68,19 +67,16 @@ export function makeCrypto(config: PBKDF2Config) {
 
               salt.copy(combined, 8)
               hash.copy(combined, salt.length + 8)
-              cb(
-                pipe(
-                  T.succeed(combined),
-                  T.map((b) => b.toString("hex"))
-                )
-              )
+
+              cb(T.succeed(combined.toString("base64")))
             }
           )
         })
       }),
     verifyPassword: (password: string, hashText: string) =>
       T.effectAsync<unknown, InvalidPassword, void>((cb) => {
-        const combined = Buffer.from(hashText, "hex")
+        const combined = Buffer.from(hashText, "base64")
+
         // extract the salt and hash from the combined buffer
         const saltBytes = combined.readUInt32BE(0)
         const hashBytes = combined.length - saltBytes - 8
