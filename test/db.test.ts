@@ -317,6 +317,7 @@ describe("Integration Suite", () => {
 
       expect(verify).toEqual(Ex.unit)
     })
+
     it("update a credential", async () => {
       const result = await runPromiseExit(
         pipe(
