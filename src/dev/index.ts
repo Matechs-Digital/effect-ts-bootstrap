@@ -5,6 +5,8 @@ import { pipe } from "@effect-ts/core/Function"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
 import * as PgPool from "../db/PgPool"
 import * as HTTP from "../http"
+import { CredentialPersistenceLive } from "../persistence/credential"
+import { UserPersistenceLive } from "../persistence/user"
 import { App } from "../program"
 import { LiveBar } from "../program/Bar"
 import { LiveFoo } from "../program/Foo"
@@ -12,7 +14,7 @@ import { TestContainersLive } from "./containers"
 import { PgConfigTest } from "./db"
 
 const Bootstrap = pipe(
-  L.allPar(HTTP.Live, LiveFoo, LiveBar),
+  L.allPar(HTTP.Live, LiveFoo, LiveBar, UserPersistenceLive, CredentialPersistenceLive),
   L.using(L.allPar(CryptoLive, PgPool.Live)),
   L.using(PgConfigTest("dev")),
   L.using(TestContainersLive("dev")),
