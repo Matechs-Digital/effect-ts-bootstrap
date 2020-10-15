@@ -8,7 +8,8 @@ import { fail } from "@effect-ts/morphic/Decoder/common"
 import { encoder } from "@effect-ts/morphic/Encoder"
 import { strictDecoder } from "@effect-ts/morphic/StrictDecoder"
 
-import { Common, commonErrorIds, Id, UserId } from "./common"
+import { Common, commonErrorIds, Id } from "./common"
+import { UserId } from "./user"
 import { validation } from "./validation"
 
 export const credentialErrorIds = {
@@ -16,36 +17,40 @@ export const credentialErrorIds = {
   password_length: "password_length"
 }
 
-const CreateCredential_ = make((F) =>
-  F.intersection([
-    UserId(F),
-    F.interface({
-      password: F.string({
-        conf: {
-          [FastCheckURI]: (_, { module: fc }) =>
-            fc.string({ minLength: 8, maxLength: 32 }),
-          [DecoderURI]: (_) => ({
-            decode: flow(
-              _.decode,
-              S.chain((s) =>
-                s.length > 8 && s.length <= 32
-                  ? S.succeed(s)
-                  : fail([
-                      {
-                        actual: s,
-                        id: credentialErrorIds.password_length,
-                        name: "password",
-                        message: "password should be have between 8 and 32 characters"
-                      }
-                    ])
-              )
+const Password_ = make((F) =>
+  F.interface({
+    password: F.string({
+      conf: {
+        [FastCheckURI]: (_, { module: fc }) =>
+          fc.string({ minLength: 8, maxLength: 32 }),
+        [DecoderURI]: (_) => ({
+          decode: flow(
+            _.decode,
+            S.chain((s) =>
+              s.length > 8 && s.length <= 32
+                ? S.succeed(s)
+                : fail([
+                    {
+                      actual: s,
+                      id: credentialErrorIds.password_length,
+                      name: "password",
+                      message: "password should be have between 8 and 32 characters"
+                    }
+                  ])
             )
-          })
-        }
-      })
+          )
+        })
+      }
     })
-  ])
+  })
 )
+
+export interface Password extends AType<typeof Password_> {}
+export interface PasswordRaw extends EType<typeof Password_> {}
+
+export const Password = opaque<PasswordRaw, Password>()(Password_)
+
+const CreateCredential_ = make((F) => F.intersection([UserId(F), Password(F)]))
 
 export interface CreateCredential extends AType<typeof CreateCredential_> {}
 export interface CreateCredentialRaw extends EType<typeof CreateCredential_> {}
@@ -74,9 +79,7 @@ export interface CredentialRaw extends EType<typeof Credential_> {}
 
 export const Credential = opaque<CredentialRaw, Credential>()(Credential_)
 
-const UpdateCredential_ = make((F) =>
-  F.intersection([Id(F), UserId(F), CreateCredential(F)])
-)
+const UpdateCredential_ = make((F) => F.intersection([Id(F), CreateCredential(F)]))
 
 export interface UpdateCredential extends AType<typeof UpdateCredential_> {}
 export interface UpdateCredentialRaw extends EType<typeof UpdateCredential_> {}

@@ -67,5 +67,15 @@ export const userErrors = (_: DecodingError) =>
     : O.none
 
 export const validateUser = validation(User, userErrors)
-
 export const validateCreateUser = validation(CreateUser, userErrors)
+
+const UserId_ = make((F) =>
+  F.interface({
+    userId: F.number()
+  })
+)
+
+export interface UserId extends AType<typeof UserId_> {}
+export interface UserIdRaw extends EType<typeof UserId_> {}
+
+export const UserId = opaque<UserIdRaw, UserId>()(UserId_)
