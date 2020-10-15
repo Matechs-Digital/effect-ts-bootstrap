@@ -41,7 +41,7 @@ export const makeUserPersistence = () => ({
     T.chain(encodeUser),
     T.chain(({ email, id }) =>
       query(
-        `UPDATE users SET email = $1::text WHERE id = $2::bigint RETURNING *`,
+        `UPDATE users SET email = $1::text WHERE id = $2::integer RETURNING *`,
         email,
         id
       )

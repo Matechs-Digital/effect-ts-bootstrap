@@ -47,9 +47,9 @@ export const makeCredentialPersistence = () => ({
       T.bind("hash", () => hashPassword(_.password)),
       T.chain(({ hash }) =>
         query(
-          `UPDATE "public"."credentials" SET "hash" = $1::text WHERE "userId" = $2::integer RETURNING *`,
+          `UPDATE "public"."credentials" SET "hash" = $1::text WHERE "id" = $2::integer RETURNING *`,
           hash,
-          _.userId
+          _.id
         )
       ),
       T.map((_) => _.rows[0]),
