@@ -1,7 +1,9 @@
 import * as Ex from "@effect-ts/core/Effect/Exit"
+import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
 import {
+  CryptoLive,
   hashPassword,
   InvalidPassword,
   PBKDF2ConfigLive,
@@ -12,7 +14,11 @@ import { testRuntime } from "./utils/runtime"
 
 describe("Crypto Suite", () => {
   describe("Live", () => {
-    const { runPromise, runPromiseExit } = pipe(PBKDF2ConfigLive, testRuntime)()
+    const { runPromise, runPromiseExit } = pipe(
+      CryptoLive,
+      L.using(PBKDF2ConfigLive),
+      testRuntime
+    )()
 
     it("should hash and verify password", async () => {
       const password = "wuihfjierngjkrnjgwrgn"
@@ -32,7 +38,11 @@ describe("Crypto Suite", () => {
     })
   })
   describe("Test", () => {
-    const { runPromise, runPromiseExit } = pipe(PBKDF2ConfigTest, testRuntime)()
+    const { runPromise, runPromiseExit } = pipe(
+      CryptoLive,
+      L.using(PBKDF2ConfigTest),
+      testRuntime
+    )()
 
     it("should hash and verify password", async () => {
       const password = "wuihfjierngjkrnjgwrgn"
