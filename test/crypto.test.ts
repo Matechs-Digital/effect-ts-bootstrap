@@ -37,6 +37,7 @@ describe("Crypto Suite", () => {
       expect(verify).toEqual(Ex.fail(new InvalidPassword()))
     })
   })
+
   describe("Test", () => {
     const { runPromise, runPromiseExit } = pipe(
       CryptoLive,
