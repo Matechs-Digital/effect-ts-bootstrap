@@ -14,6 +14,8 @@ import { PgConfigTest } from "./db"
 const Bootstrap = pipe(
   L.allPar(HTTP.Live, LiveFoo, LiveBar),
   L.using(L.allPar(CryptoLive, PgPool.Live)),
+  L.using(PgConfigTest("dev")),
+  L.using(TestContainersLive("dev")),
   L.using(
     L.allPar(
       HTTP.config({
@@ -22,9 +24,7 @@ const Bootstrap = pipe(
       }),
       PBKDF2ConfigLive
     )
-  ),
-  L.using(PgConfigTest("dev")),
-  L.using(TestContainersLive("dev"))
+  )
 )
 
 // main function (unsafe)
