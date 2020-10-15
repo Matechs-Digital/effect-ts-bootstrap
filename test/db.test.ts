@@ -330,6 +330,7 @@ describe("Integration Suite", () => {
                     userId: u.id
                   })
                 ),
+                Db.transaction,
                 Db.fromPool,
                 T.chain((_) => verifyPassword(password, _.hash))
               )
