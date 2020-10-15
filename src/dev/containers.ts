@@ -7,7 +7,8 @@ import type { StartedDockerComposeEnvironment } from "testcontainers"
 import { DockerComposeEnvironment } from "testcontainers"
 
 export const ref = {
-  integration: Symbol()
+  integration: Symbol(),
+  dev: Symbol()
 }
 
 export type Environments = keyof typeof ref

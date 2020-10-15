@@ -5,6 +5,7 @@
   "author": "Michael Arnaldi",
   "scripts": {
     "start": "node -r ts-node/register src/index.ts",
+    "dev": "node -r ts-node/register src/dev/index.ts",
     "test": "jest",
     "migration:create": "node-pg-migrate create"
   },

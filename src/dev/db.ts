@@ -1,6 +1,6 @@
 import * as L from "@effect-ts/core/Effect/Layer"
 
-import { PgConfig } from "../../src/db/PgConfig"
+import { PgConfig } from "../db/PgConfig"
 import type { Environments } from "./containers"
 import { TestContainers } from "./containers"
 
