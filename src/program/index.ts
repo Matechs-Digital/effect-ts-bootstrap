@@ -2,7 +2,7 @@ import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
-import { PBKDF2ConfigLive } from "../crypto"
+import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
 import * as HTTP from "../http"
 import { accessBarM, LiveBar } from "../program/Bar"
 import { accessFooM, LiveFoo } from "../program/Foo"
@@ -34,6 +34,7 @@ export const App = pipe(HTTP.create, addHome, addBar, Auth.add, HTTP.drain)
 
 export const Bootstrap = pipe(
   L.allPar(HTTP.Live, LiveFoo, LiveBar),
+  L.using(CryptoLive),
   L.using(
     L.allPar(
       HTTP.config({
