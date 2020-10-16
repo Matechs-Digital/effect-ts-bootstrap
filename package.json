@@ -10,9 +10,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@effect-ts/core": "^0.4.6",
-    "@effect-ts/monocle": "^0.3.7",
-    "@effect-ts/morphic": "^0.2.9",
+    "@effect-ts/core": "^0.4.7",
+    "@effect-ts/monocle": "^0.3.8",
+    "@effect-ts/morphic": "^0.2.10",
     "@types/jest": "^26.0.10",
     "@types/node": "^14.11.8",
     "@types/pg": "^7.14.5",
