@@ -5,20 +5,14 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe } from "@effect-ts/core/Function"
 
+import { addRegister } from "../api"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
-import {
-  accessClientM,
-  fromPool,
-  PgPoolLive,
-  provideClient,
-  TestMigration
-} from "../db"
+import { accessClientM, PgPoolLive, provideClient, TestMigration } from "../db"
 import { TestContainersLive } from "../dev/containers"
 import { PgConfigTest } from "../dev/db"
 import * as HTTP from "../http"
-import { Register } from "../model/api"
 import { CredentialPersistenceLive } from "../persistence/credential"
-import { register, TransactionsLive } from "../persistence/transactions"
+import { TransactionsLive } from "../persistence/transactions"
 import { UserPersistenceLive } from "../persistence/user"
 import { accessBarM, LiveBar } from "../program/Bar"
 import * as Auth from "./Auth"
@@ -52,22 +46,6 @@ export const addBar = HTTP.addRoute((r) => r.req.url === "/bar")(
       T.delay(200)(
         T.effectTotal(() => {
           res.end(`${user}: ${bar}`)
-        })
-      )
-    )
-  )
-)
-
-export const addRegister = HTTP.addRoute((r) => r.req.url === "/register")(() =>
-  pipe(
-    T.do,
-    T.bind("body", () => HTTP.morphicBody(Register)),
-    T.bind("user", ({ body }) => pipe(register(body), T.orDie, fromPool("main"))),
-    T.chain(({ user }) =>
-      HTTP.accessResM((res) =>
-        T.effectTotal(() => {
-          res.setHeader("content-type", "application/json")
-          res.end(JSON.stringify(user))
         })
       )
     )
