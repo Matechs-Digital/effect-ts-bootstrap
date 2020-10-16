@@ -34,7 +34,7 @@ const PasswordField_ = make((F) =>
                       actual: s,
                       id: credentialErrorIds.password_length,
                       name: "password",
-                      message: "password should be have between 8 and 32 characters"
+                      message: "password should have between 8 and 32 characters"
                     }
                   ])
             )

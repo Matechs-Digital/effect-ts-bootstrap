@@ -27,6 +27,7 @@ import {
   CredentialPersistenceLive,
   updateCredential
 } from "../src/persistence/credential"
+import { TransactionsLive } from "../src/persistence/transactions"
 import {
   createUser,
   getUser,
@@ -41,6 +42,7 @@ import { testRuntime } from "./utils/runtime"
 describe("Integration Suite", () => {
   const { runPromiseExit } = pipe(
     AppFiberLive,
+    L.using(TransactionsLive),
     L.using(
       L.allPar(UserPersistenceLive, CredentialPersistenceLive, LiveBar, LiveHTTP)
     ),

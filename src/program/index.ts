@@ -6,12 +6,19 @@ import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe } from "@effect-ts/core/Function"
 
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
-import { accessClientM, PgPoolLive, provideClient, TestMigration } from "../db"
+import {
+  accessClientM,
+  fromPool,
+  PgPoolLive,
+  provideClient,
+  TestMigration
+} from "../db"
 import { TestContainersLive } from "../dev/containers"
 import { PgConfigTest } from "../dev/db"
 import * as HTTP from "../http"
 import { Register } from "../model/api"
 import { CredentialPersistenceLive } from "../persistence/credential"
+import { register, TransactionsLive } from "../persistence/transactions"
 import { UserPersistenceLive } from "../persistence/user"
 import { accessBarM, LiveBar } from "../program/Bar"
 import * as Auth from "./Auth"
@@ -55,10 +62,12 @@ export const addRegister = HTTP.addRoute((r) => r.req.url === "/register")(() =>
   pipe(
     T.do,
     T.bind("body", () => HTTP.morphicBody(Register)),
-    T.chain(({ body }) =>
+    T.bind("user", ({ body }) => pipe(register(body), T.orDie, fromPool("main"))),
+    T.chain(({ user }) =>
       HTTP.accessResM((res) =>
         T.effectTotal(() => {
-          res.end(JSON.stringify(body))
+          res.setHeader("content-type", "application/json")
+          res.end(JSON.stringify(user))
         })
       )
     )
@@ -85,7 +94,10 @@ export const AppFiber = has<AppFiber>()
 export const AppFiberLive = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
 
 const Bootstrap = pipe(
-  L.allPar(HTTP.LiveHTTP, LiveBar, UserPersistenceLive, CredentialPersistenceLive),
+  TransactionsLive,
+  L.using(
+    L.allPar(HTTP.LiveHTTP, LiveBar, UserPersistenceLive, CredentialPersistenceLive)
+  ),
   L.using(TestMigration("main")),
   L.using(L.allPar(CryptoLive, PgPoolLive("main"))),
   L.using(PgConfigTest("main")("dev")),
