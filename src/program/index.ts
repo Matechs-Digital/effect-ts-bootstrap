@@ -5,7 +5,7 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe } from "@effect-ts/core/Function"
 
-import { addRegister } from "../api"
+import { addAuthMiddleware, addRegister, authenticatedUser } from "../api"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
 import { accessClientM, PgPoolLive, provideClient, TestMigration } from "../db"
 import { TestContainersLive } from "../dev/containers"
@@ -15,7 +15,6 @@ import { CredentialPersistenceLive } from "../persistence/credential"
 import { TransactionsLive } from "../persistence/transactions"
 import { UserPersistenceLive } from "../persistence/user"
 import { accessBarM, LiveBar } from "../program/Bar"
-import * as Auth from "./Auth"
 
 export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
   pipe(
@@ -40,19 +39,29 @@ export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
   )
 )
 
-export const addBar = HTTP.addRoute((r) => r.req.url === "/bar")(
-  Auth.authenticated(({ res, user }) =>
-    accessBarM((bar) =>
-      T.delay(200)(
-        T.effectTotal(() => {
-          res.end(`${user}: ${bar}`)
-        })
+export const addBar = HTTP.addRoute((r) => r.req.url === "/bar")(({ res }) =>
+  pipe(
+    authenticatedUser,
+    T.chain((user) =>
+      accessBarM((bar) =>
+        T.delay(200)(
+          T.effectTotal(() => {
+            res.end(`${user}: ${bar}`)
+          })
+        )
       )
     )
   )
 )
 
-export const App = pipe(HTTP.create, addHome, addBar, addRegister, Auth.add, HTTP.drain)
+export const App = pipe(
+  HTTP.create,
+  addHome,
+  addBar,
+  addRegister,
+  addAuthMiddleware,
+  HTTP.drain
+)
 
 export function makeAppFiber() {
   return pipe(

@@ -17,24 +17,19 @@ export const { maybeUser: accessMaybeUserM } = T.deriveAccessM(AuthSession)([
   "maybeUser"
 ])
 
-export function authenticated<R, E>(
-  body: (request: HTTP.Request & { user: string }) => T.Effect<R, E, void>
-) {
-  return (request: HTTP.Request) =>
-    accessMaybeUserM(
-      O.fold(
-        () =>
-          T.fail<HTTP.HTTPRouteException | E>({
-            _tag: "HTTPRouteException",
-            status: 403,
-            message: "Forbidden"
-          }),
-        (user) => body({ ...request, user })
-      )
-    )
-}
+export const authenticatedUser = accessMaybeUserM(
+  O.fold(
+    () =>
+      T.fail<HTTP.HTTPRouteException>({
+        _tag: "HTTPRouteException",
+        status: 403,
+        message: "Forbidden"
+      }),
+    T.succeed
+  )
+)
 
-export function add<R, E>(routes: HTTP.Routes<R & Has<AuthSession>, E>) {
+export function addAuthMiddleware<R, E>(routes: HTTP.Routes<R & Has<AuthSession>, E>) {
   return pipe(
     routes,
     HTTP.addMiddleware((cont) => (request, next) =>
