@@ -5,10 +5,11 @@ import { flow, pipe } from "@effect-ts/core/Function"
 import type * as M from "@effect-ts/morphic"
 import { decoder } from "@effect-ts/morphic/Decoder"
 import type { DecodingError } from "@effect-ts/morphic/Decoder/common"
+import { encoder } from "@effect-ts/morphic/Encoder"
 
 import { allErrors } from "../../model/collectors"
 import type { HTTPRouteException } from "../exceptions"
-import { accessReqM } from "../server"
+import { accessReqM, accessResM } from "../server"
 
 export const readBody = accessReqM((req) =>
   T.effectAsyncInterrupt<unknown, never, Buffer>((cb) => {
@@ -65,6 +66,22 @@ export function morphicBody<L, A>(
               error: errors.length > 0 ? errors.join(", ") : "malformed body"
             })
           })
+        })
+      )
+    )
+  )
+}
+
+export function morphicResponse<L, A>(_: M.M<{}, L, A>) {
+  const encode = encoder(_).encode
+
+  return flow(
+    encode,
+    T.chain((l) =>
+      accessResM((res) =>
+        T.effectTotal(() => {
+          res.setHeader("content-type", "application/json")
+          res.end(JSON.stringify(l))
         })
       )
     )

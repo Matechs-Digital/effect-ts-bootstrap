@@ -1,4 +1,4 @@
-export { morphicBody, readBody, readJsonBody } from "./api"
+export { morphicBody, morphicResponse, readBody, readJsonBody } from "./api"
 export { HTTPRouteException, isHTTPRouteException } from "./exceptions"
 export { drain } from "./middlewares"
 export {
