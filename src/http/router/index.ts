@@ -64,6 +64,26 @@ export function addRoute(path: Predicate<Request>) {
     )
 }
 
+export function addRouteM<R3>(path: (_: Request) => T.RIO<R3, boolean>) {
+  return <R, E>(f: (request: Request) => T.Effect<R & Has<Request>, E, void>) => <
+    R2,
+    E2
+  >(
+    self: Routes<R2, E2>
+  ): Routes<R & R2 & R3, E | E2> =>
+    pipe(
+      self,
+      route(
+        (_, n): T.Effect<R & R2 & R3, E | E2, void> =>
+          T.chain_(
+            path(_),
+            (b): T.Effect<R & R2 & R3, E | E2, void> =>
+              b ? T.provideService(Request)(_)(f(_)) : n
+          )
+      )
+    )
+}
+
 export function addMiddleware<R2, R, E, E2>(
   middle: (
     cont: RouteFn<R2, E2>
@@ -147,4 +167,18 @@ export function drain<R>(_: Routes<R, never>) {
       )
     )
   )
+}
+
+export type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE" | "OPTIONS"
+
+export function matchRoute(url: RegExp, methods: Method[] = []) {
+  return (r: Request) =>
+    r.req.url
+      ? methods.length === 0
+        ? url.test(r.req.url)
+        : r.req.method
+        ? url.test(r.req.url) &&
+          (<string[]>methods).includes(r.req.method.toUpperCase())
+        : false
+      : false
 }

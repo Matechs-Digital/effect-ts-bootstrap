@@ -1,17 +1,26 @@
-export { addMiddleware, addRoute, create, Routes, isRouterDraining } from "./router"
-export {
-  serverConfig,
-  HTTPServerConfig,
-  RequestQueue,
-  accessServerConfigM,
-  accessQueueM,
-  accessServerM,
-  Request,
-  Server,
-  LiveHTTP,
-  accessReqM,
-  accessResM
-} from "./server"
+export { morphicBody, readBody, readJsonBody } from "./api"
 export { HTTPRouteException, isHTTPRouteException } from "./exceptions"
 export { drain } from "./middlewares"
-export { morphicBody, readBody, readJsonBody } from "./api"
+export {
+  addMiddleware,
+  addRoute,
+  addRouteM,
+  create,
+  isRouterDraining,
+  matchRoute,
+  Method,
+  Routes
+} from "./router"
+export {
+  accessQueueM,
+  accessReqM,
+  accessResM,
+  accessServerConfigM,
+  accessServerM,
+  HTTPServerConfig,
+  LiveHTTP,
+  Request,
+  RequestQueue,
+  Server,
+  serverConfig
+} from "./server"

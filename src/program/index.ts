@@ -5,7 +5,7 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe } from "@effect-ts/core/Function"
 
-import { addAuthMiddleware, addRegister, authenticatedUser } from "../api"
+import { addAuthMiddleware, addRegistration, authenticatedUser } from "../api"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
 import { accessClientM, PgPoolLive, provideClient, TestMigration } from "../db"
 import { TestContainersLive } from "../dev/containers"
@@ -58,7 +58,7 @@ export const App = pipe(
   HTTP.create,
   addHome,
   addBar,
-  addRegister,
+  addRegistration,
   addAuthMiddleware,
   HTTP.drain
 )
