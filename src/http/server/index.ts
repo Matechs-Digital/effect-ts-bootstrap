@@ -33,6 +33,13 @@ export interface Request {
   res: http.ServerResponse
 }
 
+export const Request = has<Request>()
+
+export const { req: accessReqM, res: accessResM } = T.deriveAccessM(Request)([
+  "req",
+  "res"
+])
+
 export interface Server {
   server: http.Server
 }

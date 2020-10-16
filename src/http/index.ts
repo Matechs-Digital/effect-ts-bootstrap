@@ -8,7 +8,10 @@ export {
   accessServerM,
   Request,
   Server,
-  LiveHTTP
+  LiveHTTP,
+  accessReqM,
+  accessResM
 } from "./server"
 export { HTTPRouteException, isHTTPRouteException } from "./exceptions"
 export { drain } from "./middlewares"
+export { morphicBody, readBody, readJsonBody } from "./api"

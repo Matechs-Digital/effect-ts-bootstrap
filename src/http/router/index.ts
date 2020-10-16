@@ -1,12 +1,12 @@
 import * as A from "@effect-ts/core/Classic/Array"
 import * as FA from "@effect-ts/core/Classic/FreeAssociative"
+import type { Has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as F from "@effect-ts/core/Effect/FiberRef"
 import type { Predicate } from "@effect-ts/core/Function"
 import { flow, identity, pipe } from "@effect-ts/core/Function"
 
-import type { Request } from "../server"
-import { accessQueueM } from "../server"
+import { accessQueueM, Request } from "../server"
 
 export class Empty<R, E> {
   readonly _R!: (_: R) => void
@@ -49,13 +49,17 @@ export function route<R2, E2, R, E>(
 }
 
 export function addRoute(path: Predicate<Request>) {
-  return <R, E>(f: (request: Request) => T.Effect<R, E, void>) => <R2, E2>(
+  return <R, E>(f: (request: Request) => T.Effect<R & Has<Request>, E, void>) => <
+    R2,
+    E2
+  >(
     self: Routes<R2, E2>
   ): Routes<R & R2, E | E2> =>
     pipe(
       self,
       route(
-        (_, n): T.Effect<R & R2, E | E2, void> => (_.req.url ? (path(_) ? f(_) : n) : n)
+        (_, n): T.Effect<R & R2, E | E2, void> =>
+          _.req.url ? (path(_) ? T.provideService(Request)(_)(f(_)) : n) : n
       )
     )
 }

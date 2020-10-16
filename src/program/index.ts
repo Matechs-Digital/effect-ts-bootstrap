@@ -1,4 +1,5 @@
 import { has } from "@effect-ts/core/Classic/Has"
+import { none, some } from "@effect-ts/core/Classic/Option"
 import * as T from "@effect-ts/core/Effect"
 import { fiberContext } from "@effect-ts/core/Effect"
 import { pretty } from "@effect-ts/core/Effect/Cause"
@@ -6,6 +7,8 @@ import * as F from "@effect-ts/core/Effect/Fiber"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe } from "@effect-ts/core/Function"
+import { make } from "@effect-ts/morphic"
+import type { DecodingError } from "@effect-ts/morphic/Decoder/common"
 
 import { assertFailure } from "../../test/utils/assertions"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
@@ -13,6 +16,13 @@ import { accessClientM, PgPoolLive, provideClient, TestMigration } from "../db"
 import { TestContainersLive } from "../dev/containers"
 import { PgConfigTest } from "../dev/db"
 import * as HTTP from "../http"
+import { Register } from "../model/api"
+import {
+  CreateCredential,
+  credentialErrorIds,
+  PasswordField
+} from "../model/credential"
+import { CreateUser, userErrorIds, UserIdField } from "../model/user"
 import { CredentialPersistenceLive } from "../persistence/credential"
 import { UserPersistenceLive } from "../persistence/user"
 import { accessBarM, LiveBar } from "../program/Bar"
@@ -53,7 +63,21 @@ export const addBar = HTTP.addRoute((r) => r.req.url === "/bar")(
   )
 )
 
-export const App = pipe(HTTP.create, addHome, addBar, Auth.add, HTTP.drain)
+export const addRegister = HTTP.addRoute((r) => r.req.url === "/register")(() =>
+  pipe(
+    T.do,
+    T.bind("body", () => HTTP.morphicBody(Register)),
+    T.chain(({ body }) =>
+      HTTP.accessResM((res) =>
+        T.effectTotal(() => {
+          res.end(JSON.stringify(body))
+        })
+      )
+    )
+  )
+)
+
+export const App = pipe(HTTP.create, addHome, addBar, addRegister, Auth.add, HTTP.drain)
 
 export function makeAppFiber() {
   return pipe(
