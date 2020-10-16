@@ -171,7 +171,7 @@ export function drain<R>(_: Routes<R, never>) {
 
 export type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE" | "OPTIONS"
 
-export function matchRoute(url: RegExp, methods: Method[] = []) {
+export function matchRegex(url: RegExp, methods: Method[] = []) {
   return (r: Request) =>
     r.req.url
       ? methods.length === 0

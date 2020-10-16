@@ -7,7 +7,7 @@ export {
   addRouteM,
   create,
   isRouterDraining,
-  matchRoute,
+  matchRegex,
   Method,
   Routes
 } from "./router"
