@@ -18,7 +18,7 @@ import {
 } from "../src/db"
 import { TestContainersLive } from "../src/dev/containers"
 import { PgConfigTest } from "../src/dev/db"
-import { isRunning, LiveHTTP, serverConfig } from "../src/http"
+import { isRouterDraining, LiveHTTP, serverConfig } from "../src/http"
 import { Credential, PasswordField } from "../src/model/credential"
 import { Email, EmailField, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
@@ -84,7 +84,7 @@ describe("Integration Suite", () => {
 
     it("http server fiber is running", async () => {
       const result = await runPromiseExit(
-        T.accessServiceM(AppFiber)((_) => _.fiber.getRef(isRunning))
+        T.accessServiceM(AppFiber)((_) => _.fiber.getRef(isRouterDraining))
       )
       expect(result).toEqual(Ex.succeed(true))
     })

@@ -1,4 +1,4 @@
-export { addMiddleware, addRoute, create, Routes, isRunning } from "./router"
+export { addMiddleware, addRoute, create, Routes, isRouterDraining } from "./router"
 export {
   serverConfig,
   HTTPServerConfig,

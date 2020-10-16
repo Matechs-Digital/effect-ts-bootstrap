@@ -108,7 +108,11 @@ function toArray<R, E>(_: Routes<R, E>): readonly RouteFn<R, E>[] {
 
 export const create: Routes<unknown, never> = new Empty()
 
-export const isRunning = new F.FiberRef<boolean>(false, identity, (a, b) => a && b)
+export const isRouterDraining = new F.FiberRef<boolean>(
+  false,
+  identity,
+  (a, b) => a && b
+)
 
 export function drain<R>(_: Routes<R, never>) {
   const routes = toArray(_)
@@ -132,7 +136,7 @@ export function drain<R>(_: Routes<R, never>) {
     T.chain((process) =>
       accessQueueM((queue) =>
         pipe(
-          isRunning,
+          isRouterDraining,
           F.set(true),
           T.andThen(pipe(queue.take, T.chain(flow(process, T.fork)), T.forever))
         )
