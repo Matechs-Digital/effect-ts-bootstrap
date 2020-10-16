@@ -3,11 +3,9 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
-import * as PgClient from "../db/PgClient"
-import { PgPoolLive } from "../db/PgPool"
+import { accessClientM, PgPoolLive, provideClient, TestMigration } from "../db"
 import { TestContainersLive } from "../dev/containers"
 import { PgConfigTest } from "../dev/db"
-import { TestMigrations } from "../dev/migrations"
 import * as HTTP from "../http"
 import { CredentialPersistenceLive } from "../persistence/credential"
 import { UserPersistenceLive } from "../persistence/user"
@@ -16,7 +14,7 @@ import * as Auth from "./Auth"
 
 export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
   pipe(
-    PgClient.accessM((client) =>
+    accessClientM("main")((client) =>
       pipe(
         T.fromPromiseDie(() =>
           client.query(
@@ -27,7 +25,7 @@ export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
         T.map((_) => _.rows)
       )
     ),
-    PgClient.provide,
+    provideClient("main"),
     T.result,
     T.chain((ex) =>
       T.effectTotal(() => {
@@ -53,9 +51,9 @@ export const App = pipe(HTTP.create, addHome, addBar, Auth.add, HTTP.drain)
 
 const Bootstrap = pipe(
   L.allPar(HTTP.Live, LiveBar, UserPersistenceLive, CredentialPersistenceLive),
-  L.using(TestMigrations),
-  L.using(L.allPar(CryptoLive, PgPoolLive)),
-  L.using(PgConfigTest("dev")),
+  L.using(TestMigration("main")),
+  L.using(L.allPar(CryptoLive, PgPoolLive("main"))),
+  L.using(PgConfigTest("main")("dev")),
   L.using(TestContainersLive("dev")),
   L.using(
     L.allPar(

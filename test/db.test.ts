@@ -7,12 +7,16 @@ import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import * as fc from "fast-check"
 
 import { CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
-import * as Db from "../src/db/Db"
-import * as PgClient from "../src/db/PgClient"
-import * as PgPool from "../src/db/PgPool"
+import {
+  accessClientM,
+  fromPool,
+  PgPoolLive,
+  provideClient,
+  TestMigration,
+  transaction
+} from "../src/db"
 import { TestContainersLive } from "../src/dev/containers"
 import { PgConfigTest } from "../src/dev/db"
-import { TestMigrations } from "../src/dev/migrations"
 import { Credential, PasswordField } from "../src/model/credential"
 import { Email, EmailField, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
@@ -33,9 +37,9 @@ import { testRuntime } from "./utils/runtime"
 describe("Integration Suite", () => {
   const { runPromiseExit } = pipe(
     L.allPar(UserPersistenceLive, CredentialPersistenceLive),
-    L.using(TestMigrations),
-    L.using(L.allPar(PgPool.PgPoolLive, CryptoLive)),
-    L.using(L.allPar(PgConfigTest("integration"), PBKDF2ConfigTest)),
+    L.using(TestMigration("main")),
+    L.using(L.allPar(PgPoolLive("main"), CryptoLive)),
+    L.using(L.allPar(PgConfigTest("main")("integration"), PBKDF2ConfigTest)),
     L.using(TestContainersLive("integration")),
     testRuntime
   )({
@@ -47,7 +51,7 @@ describe("Integration Suite", () => {
     it("run simple query", async () => {
       const response = await runPromiseExit(
         pipe(
-          PgClient.accessM((client) =>
+          accessClientM("main")((client) =>
             pipe(
               T.fromPromiseDie(() =>
                 client.query("SELECT $1::text as name", ["Michael"])
@@ -55,7 +59,7 @@ describe("Integration Suite", () => {
               T.map((_): string => _.rows[0].name)
             )
           ),
-          PgClient.provide
+          provideClient("main")
         )
       )
 
@@ -65,7 +69,7 @@ describe("Integration Suite", () => {
     it("check users table structure", async () => {
       const response = await runPromiseExit(
         pipe(
-          PgClient.accessM((client) =>
+          accessClientM("main")((client) =>
             pipe(
               T.fromPromiseDie(() =>
                 client.query(
@@ -76,7 +80,7 @@ describe("Integration Suite", () => {
               T.map((_) => _.rows)
             )
           ),
-          PgClient.provide
+          provideClient("main")
         )
       )
 
@@ -105,7 +109,7 @@ describe("Integration Suite", () => {
     it("check credentials table structure", async () => {
       const response = await runPromiseExit(
         pipe(
-          PgClient.accessM((client) =>
+          accessClientM("main")((client) =>
             pipe(
               T.fromPromiseDie(() =>
                 client.query(
@@ -116,7 +120,7 @@ describe("Integration Suite", () => {
               T.map((_) => _.rows)
             )
           ),
-          PgClient.provide
+          provideClient("main")
         )
       )
 
@@ -155,7 +159,7 @@ describe("Integration Suite", () => {
   describe("User Api", () => {
     it("creates a new user", async () => {
       const result = await runPromiseExit(
-        pipe(createUser({ email: Email.wrap("ma@example.org") }), Db.fromPool)
+        pipe(createUser({ email: Email.wrap("ma@example.org") }), fromPool("main"))
       )
 
       const nameAndId = pipe(User.lens, Lens.props("email", "id"))
@@ -167,7 +171,7 @@ describe("Integration Suite", () => {
 
     it("fail to create a new user with an empty email", async () => {
       const result = await runPromiseExit(
-        pipe(createUser({ email: Email.wrap("") }), Db.fromPool)
+        pipe(createUser({ email: Email.wrap("") }), fromPool("main"))
       )
 
       expect(result).toEqual(
@@ -186,8 +190,8 @@ describe("Integration Suite", () => {
             createUser({ email: Email.wrap("USER_2@example.org") })
           ),
           T.tap(() => T.fail("error")),
-          Db.transaction,
-          Db.fromPool
+          transaction("main"),
+          fromPool("main")
         )
       )
 
@@ -195,7 +199,7 @@ describe("Integration Suite", () => {
 
       const count = await runPromiseExit(
         pipe(
-          PgClient.accessM((client) =>
+          accessClientM("main")((client) =>
             pipe(
               T.fromPromiseDie(() =>
                 client.query("SELECT COUNT(*) FROM users WHERE email LIKE 'USER_%'")
@@ -203,7 +207,7 @@ describe("Integration Suite", () => {
               T.map((_) => parseInt(_.rows[0].count))
             )
           ),
-          PgClient.provide
+          provideClient("main")
         )
       )
 
@@ -216,8 +220,8 @@ describe("Integration Suite", () => {
             createUser({ email: Email.wrap("USER_1@example.org") }),
             createUser({ email: Email.wrap("USER_2@example.org") })
           ),
-          Db.transaction,
-          Db.fromPool
+          transaction("main"),
+          fromPool("main")
         )
       )
 
@@ -230,7 +234,7 @@ describe("Integration Suite", () => {
 
       const countSuccess = await runPromiseExit(
         pipe(
-          PgClient.accessM((client) =>
+          accessClientM("main")((client) =>
             pipe(
               T.fromPromiseDie(() =>
                 client.query("SELECT COUNT(*) FROM users WHERE email LIKE 'USER_%'")
@@ -238,7 +242,7 @@ describe("Integration Suite", () => {
               T.map((_) => parseInt(_.rows[0].count))
             )
           ),
-          PgClient.provide
+          provideClient("main")
         )
       )
 
@@ -251,7 +255,7 @@ describe("Integration Suite", () => {
         pipe(
           getUser({ id: 5 }),
           T.map((_) => _.email),
-          Db.fromPool
+          fromPool("main")
         )
       )
 
@@ -268,7 +272,7 @@ describe("Integration Suite", () => {
             updateUser({ ...user, email: Email.wrap("NewEmail@example.org") })
           ),
           T.map((_) => _.email),
-          Db.fromPool
+          fromPool("main")
         )
       )
 
@@ -279,7 +283,10 @@ describe("Integration Suite", () => {
   describe("Credential Api", () => {
     it("creates a credential", async () => {
       const result = await runPromiseExit(
-        pipe(createCredential({ userId: 5, password: "helloworld000" }), Db.fromPool)
+        pipe(
+          createCredential({ userId: 5, password: "helloworld000" }),
+          fromPool("main")
+        )
       )
 
       const id = pipe(Credential.lens, Lens.prop("id"))
@@ -302,7 +309,7 @@ describe("Integration Suite", () => {
       const result = await runPromiseExit(
         pipe(
           updateCredential({ id: 1, userId: 105, password: "helloworld001" }),
-          Db.fromPool
+          fromPool("main")
         )
       )
 
@@ -339,8 +346,8 @@ describe("Integration Suite", () => {
                     userId: u.id
                   })
                 ),
-                Db.transaction,
-                Db.fromPool,
+                transaction("main"),
+                fromPool("main"),
                 T.chain((_) => verifyPassword(password, _.hash))
               )
             )

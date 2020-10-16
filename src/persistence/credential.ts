@@ -4,7 +4,7 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import { flow, pipe } from "@effect-ts/core/Function"
 
 import { hashPassword } from "../crypto"
-import { query } from "../db/Db"
+import { query } from "../db"
 import { encodeId, validateId } from "../model/common"
 import type { CreateCredential, UpdateCredential } from "../model/credential"
 import { decodeCredential, validateCreateCredential } from "../model/credential"
@@ -18,7 +18,7 @@ export const makeCredentialPersistence = () => ({
     validateId,
     T.chain(encodeId),
     T.chain(({ id }) =>
-      query(`SELECT * FROM "public"."credentials" WHERE "id" = $1::integer`, id)
+      query("main")(`SELECT * FROM "public"."credentials" WHERE "id" = $1::integer`, id)
     ),
     T.chain((_) =>
       _.rows.length > 0 ? T.succeed(_.rows[0]) : T.fail(new CredentialNotFound())
@@ -31,7 +31,7 @@ export const makeCredentialPersistence = () => ({
       T.tap(() => validateCreateCredential(_)),
       T.bind("hash", () => hashPassword(_.password)),
       T.chain(({ hash }) =>
-        query(
+        query("main")(
           `INSERT INTO "public"."credentials" ("userId", "hash") VALUES ($1::integer, $2::text) RETURNING *`,
           _.userId,
           hash
@@ -46,7 +46,7 @@ export const makeCredentialPersistence = () => ({
       T.tap(() => validateCreateCredential(_)),
       T.bind("hash", () => hashPassword(_.password)),
       T.chain(({ hash }) =>
-        query(
+        query("main")(
           `UPDATE "public"."credentials" SET "hash" = $1::text WHERE "id" = $2::integer RETURNING *`,
           hash,
           _.id
