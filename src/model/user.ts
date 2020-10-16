@@ -1,6 +1,9 @@
 import * as O from "@effect-ts/core/Classic/Option"
 import * as S from "@effect-ts/core/Classic/Sync"
 import { flow } from "@effect-ts/core/Function"
+import type { TypeOf } from "@effect-ts/core/Newtype"
+import { newtype, typeDef } from "@effect-ts/core/Newtype"
+import * as I from "@effect-ts/monocle/Iso"
 import type { AType, EType } from "@effect-ts/morphic"
 import { DecoderURI, FastCheckURI, make, opaque } from "@effect-ts/morphic"
 import type { DecodingError } from "@effect-ts/morphic/Decoder/common"
@@ -14,34 +17,53 @@ import { validation } from "./validation"
 export const userErrorIds = {
   ...commonErrorIds,
   email_length: "email_length",
+  email_shape: "email_shape",
   user_id_negative: "user_id_negative"
 }
 
+const Email_ = typeDef<string>()("Email")
+export interface Email extends TypeOf<typeof Email_> {}
+export const Email = newtype<Email>()(Email_)
+
 const EmailField_ = make((F) =>
   F.interface({
-    email: F.string({
-      conf: {
-        [FastCheckURI]: (_, { module: fc }) =>
-          fc.string({ minLength: 1, maxLength: 255 }),
-        [DecoderURI]: (_) => ({
-          decode: flow(
-            _.decode,
-            S.chain((s) =>
-              s.length > 0 && s.length <= 255
-                ? S.succeed(s)
-                : fail([
-                    {
-                      actual: s,
-                      id: userErrorIds.email_length,
-                      name: "email",
-                      message: "email should be between 0 and 255 characters long"
-                    }
-                  ])
+    email: F.newtypeIso(
+      I.newtype<Email>(),
+      F.string({
+        conf: {
+          [FastCheckURI]: (_, { module: fc }) =>
+            fc.emailAddress().filter((_) => _.length > 0 && _.length <= 255),
+          [DecoderURI]: (_) => ({
+            decode: flow(
+              _.decode,
+              S.chain((s) =>
+                s.length > 0 && s.length <= 255
+                  ? /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(
+                      s
+                    )
+                    ? S.succeed(s)
+                    : fail([
+                        {
+                          actual: s,
+                          id: userErrorIds.email_shape,
+                          name: "email",
+                          message: "email doesn't match the required pattern"
+                        }
+                      ])
+                  : fail([
+                      {
+                        actual: s,
+                        id: userErrorIds.email_length,
+                        name: "email",
+                        message: "email should be between 0 and 255 characters long"
+                      }
+                    ])
+              )
             )
-          )
-        })
-      }
-    })
+          })
+        }
+      })
+    )
   })
 )
 
@@ -93,7 +115,7 @@ export const UserIdField = make((F) =>
                       actual: s,
                       id: userErrorIds.user_id_negative,
                       name: "userId",
-                      message: "userId should be between 0 and 255 characters long"
+                      message: "userId should be positive"
                     }
                   ])
             )

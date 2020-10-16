@@ -282,34 +282,27 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@effect-ts/core@^0.4.5":
-  version "0.4.5"
-  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.4.5.tgz#bb102c065489e7f9db02776e274fb92bc59a733a"
-  integrity sha512-velSQwyMMWzzf7GDP57IGZSBhesTN3+/b+zht4UKE2stsY3YBtYcF2InZil9b9ud4UhxPYudmU3VewYXW4L4gA==
+"@effect-ts/core@^0.4.6":
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.4.6.tgz#81c4dda4e128a018ced77aaf5349c8eafb113613"
+  integrity sha512-jkNrtcTHB+XDyjINUp1VXvURhlf3Z1IWovpxEejm+e0aIVybgjE/dxzufVRbRiDJ7pmK21uQZv/Q/BgCEIkkTg==
   dependencies:
     "@effect-ts/system" "^0.2.5"
 
-"@effect-ts/monocle@^0.3.5":
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/@effect-ts/monocle/-/monocle-0.3.5.tgz#5bb37001a3a9ba4da3256520d885114e61110e48"
-  integrity sha512-xxuVS9XcVXnFlGHsxNa8Pv3ck+pq6HNqjoxBIYVPS0RYZNsO3pIUHaQKyaEDInP5U9o+xZfR/yrVI/W7Iq++QA==
+"@effect-ts/monocle@^0.3.7":
+  version "0.3.7"
+  resolved "https://registry.yarnpkg.com/@effect-ts/monocle/-/monocle-0.3.7.tgz#21353a163d7a50f2792ac85f37b52e68cfe3a5ef"
+  integrity sha512-y4sWbLhyB+xC1MKrCIDvOle4PJ1mwbCkWDGdeujcT78I3OZt57cxhINiShhBf6L0uI9KHo5Xy0Gl4RorroTKXA==
   dependencies:
-    "@effect-ts/core" "^0.4.5"
+    "@effect-ts/core" "^0.4.6"
 
-"@effect-ts/monocle@^0.3.6":
-  version "0.3.6"
-  resolved "https://registry.yarnpkg.com/@effect-ts/monocle/-/monocle-0.3.6.tgz#05ac60701dd7cab28dc2b70ed1f66d617388c3e8"
-  integrity sha512-prBsrcF/q1o2QdSZKfIuziW4KjDnWpmtw9/34uO47BZW1UbHgnfQWL8nqWu9k1TsfAqghWFZqvsEJFfBzRYL1w==
+"@effect-ts/morphic@^0.2.9":
+  version "0.2.9"
+  resolved "https://registry.yarnpkg.com/@effect-ts/morphic/-/morphic-0.2.9.tgz#946b4ca32f3f80747c31e423dc76c6434d3a7366"
+  integrity sha512-WfmCckWIVboKmf9TgXa11EbTSiXCpempzQ6JnCiOeQzpkZg3Sc0ORUg91DPmJjcKsymHv8JgRJtzIZq4jEyzvQ==
   dependencies:
-    "@effect-ts/core" "^0.4.5"
-
-"@effect-ts/morphic@^0.2.8":
-  version "0.2.8"
-  resolved "https://registry.yarnpkg.com/@effect-ts/morphic/-/morphic-0.2.8.tgz#600952363e6c015cf591f5a2b4a4aca29b618ade"
-  integrity sha512-Q/9BRg66du0jhlCXRjMUrFNkS66xkobawuL8XMRb4hIh1WCDMWlPjauYnb78o3B7Scwb54aek3A5xsYqg21qPA==
-  dependencies:
-    "@effect-ts/core" "^0.4.5"
-    "@effect-ts/monocle" "^0.3.6"
+    "@effect-ts/core" "^0.4.6"
+    "@effect-ts/monocle" "^0.3.7"
 
 "@effect-ts/system@^0.2.5":
   version "0.2.5"

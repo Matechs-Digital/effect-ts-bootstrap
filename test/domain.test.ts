@@ -25,6 +25,30 @@ it("decodes user", () => {
   )
 })
 
+it("fail to decode user", () => {
+  expect(
+    T.runEither(
+      decodeUser({
+        createdAt: "2020-10-10T14:50:17.184Z",
+        updatedAt: "2020-10-10T14:50:17.184Z",
+        id: 1,
+        email: "example.org"
+      })
+    )
+  ).toEqual(
+    left(
+      new DecodeError([
+        {
+          actual: "example.org",
+          id: "email_shape",
+          message: "email doesn't match the required pattern",
+          name: "email"
+        }
+      ])
+    )
+  )
+})
+
 it("decodes id", () => {
   expect(
     T.runEither(

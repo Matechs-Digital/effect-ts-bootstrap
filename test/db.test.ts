@@ -14,7 +14,7 @@ import { TestContainersLive } from "../src/dev/containers"
 import { PgConfigTest } from "../src/dev/db"
 import { TestMigrations } from "../src/dev/migrations"
 import { Credential, PasswordField } from "../src/model/credential"
-import { EmailField, User } from "../src/model/user"
+import { Email, EmailField, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import {
   createCredential,
@@ -155,7 +155,7 @@ describe("Integration Suite", () => {
   describe("User Api", () => {
     it("creates a new user", async () => {
       const result = await runPromiseExit(
-        pipe(createUser({ email: "ma@example.org" }), Db.fromPool)
+        pipe(createUser({ email: Email.wrap("ma@example.org") }), Db.fromPool)
       )
 
       const nameAndId = pipe(User.lens, Lens.props("email", "id"))
@@ -165,8 +165,10 @@ describe("Integration Suite", () => {
       )
     })
 
-    it("fail to create a new user with an empty name", async () => {
-      const result = await runPromiseExit(pipe(createUser({ email: "" }), Db.fromPool))
+    it("fail to create a new user with an empty email", async () => {
+      const result = await runPromiseExit(
+        pipe(createUser({ email: Email.wrap("") }), Db.fromPool)
+      )
 
       expect(result).toEqual(
         Ex.fail(
@@ -179,9 +181,9 @@ describe("Integration Suite", () => {
       const result = await runPromiseExit(
         pipe(
           T.tuple(
-            createUser({ email: "USER_0@example.org" }),
-            createUser({ email: "USER_1@example.org" }),
-            createUser({ email: "USER_2@example.org" })
+            createUser({ email: Email.wrap("USER_0@example.org") }),
+            createUser({ email: Email.wrap("USER_1@example.org") }),
+            createUser({ email: Email.wrap("USER_2@example.org") })
           ),
           T.tap(() => T.fail("error")),
           Db.transaction,
@@ -210,9 +212,9 @@ describe("Integration Suite", () => {
       const resultSuccess = await runPromiseExit(
         pipe(
           T.tuple(
-            createUser({ email: "USER_0@example.org" }),
-            createUser({ email: "USER_1@example.org" }),
-            createUser({ email: "USER_2@example.org" })
+            createUser({ email: Email.wrap("USER_0@example.org") }),
+            createUser({ email: Email.wrap("USER_1@example.org") }),
+            createUser({ email: Email.wrap("USER_2@example.org") })
           ),
           Db.transaction,
           Db.fromPool
@@ -260,9 +262,11 @@ describe("Integration Suite", () => {
       const result = await runPromiseExit(
         pipe(
           createUser({
-            email: "OldName"
+            email: Email.wrap("OldName@example.org")
           }),
-          T.chain((user) => updateUser({ ...user, email: "NewEmail@example.org" })),
+          T.chain((user) =>
+            updateUser({ ...user, email: Email.wrap("NewEmail@example.org") })
+          ),
           T.map((_) => _.email),
           Db.fromPool
         )
