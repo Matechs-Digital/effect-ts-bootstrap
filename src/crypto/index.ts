@@ -37,8 +37,8 @@ export class InvalidPassword {
 
 export function makeCrypto(config: PBKDF2Config) {
   return {
-    hashPassword: (password: string) =>
-      T.effectAsync<unknown, never, string>((cb) => {
+    hashPassword: (password: string): T.UIO<string> =>
+      T.effectAsync((cb) => {
         // generate a salt for pbkdf2
         crypto.randomBytes(config.saltBytes, function (err, salt) {
           if (err) {
@@ -73,8 +73,8 @@ export function makeCrypto(config: PBKDF2Config) {
           )
         })
       }),
-    verifyPassword: (password: string, hashText: string) =>
-      T.effectAsync<unknown, InvalidPassword, void>((cb) => {
+    verifyPassword: (password: string, hashText: string): T.IO<InvalidPassword, void> =>
+      T.effectAsync((cb) => {
         const combined = Buffer.from(hashText, "base64")
 
         // extract the salt and hash from the combined buffer
