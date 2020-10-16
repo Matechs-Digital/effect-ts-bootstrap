@@ -1,5 +1,6 @@
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
+import * as FR from "@effect-ts/core/Effect/FiberRef"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { pipe } from "@effect-ts/core/Function"
 import * as Lens from "@effect-ts/monocle/Lens"
@@ -17,6 +18,7 @@ import {
 } from "../src/db"
 import { TestContainersLive } from "../src/dev/containers"
 import { PgConfigTest } from "../src/dev/db"
+import { isRunning, LiveHTTP, serverConfig } from "../src/http"
 import { Credential, PasswordField } from "../src/model/credential"
 import { Email, EmailField, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
@@ -31,15 +33,29 @@ import {
   updateUser,
   UserPersistenceLive
 } from "../src/persistence/user"
+import { AppFiber, AppFiberLive } from "../src/program"
+import { LiveBar } from "../src/program/Bar"
 import { assertSuccess } from "./utils/assertions"
 import { testRuntime } from "./utils/runtime"
 
 describe("Integration Suite", () => {
   const { runPromiseExit } = pipe(
-    L.allPar(UserPersistenceLive, CredentialPersistenceLive),
+    AppFiberLive,
+    L.using(
+      L.allPar(UserPersistenceLive, CredentialPersistenceLive, LiveBar, LiveHTTP)
+    ),
     L.using(TestMigration("main")),
     L.using(L.allPar(PgPoolLive("main"), CryptoLive)),
-    L.using(L.allPar(PgConfigTest("main")("integration"), PBKDF2ConfigTest)),
+    L.using(
+      L.allPar(
+        PgConfigTest("main")("integration"),
+        PBKDF2ConfigTest,
+        serverConfig({
+          host: "0.0.0.0",
+          port: 8082
+        })
+      )
+    ),
     L.using(TestContainersLive("integration")),
     testRuntime
   )({
@@ -64,6 +80,13 @@ describe("Integration Suite", () => {
       )
 
       expect(response).toEqual(Ex.succeed("Michael"))
+    })
+
+    it("http server fiber is running", async () => {
+      const result = await runPromiseExit(
+        T.accessServiceM(AppFiber)((_) => _.fiber.getRef(isRunning))
+      )
+      expect(result).toEqual(Ex.succeed(true))
     })
 
     it("check users table structure", async () => {

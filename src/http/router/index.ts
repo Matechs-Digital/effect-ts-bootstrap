@@ -1,8 +1,9 @@
 import * as A from "@effect-ts/core/Classic/Array"
 import * as FA from "@effect-ts/core/Classic/FreeAssociative"
 import * as T from "@effect-ts/core/Effect"
+import * as F from "@effect-ts/core/Effect/FiberRef"
 import type { Predicate } from "@effect-ts/core/Function"
-import { flow, pipe } from "@effect-ts/core/Function"
+import { flow, identity, pipe } from "@effect-ts/core/Function"
 
 import type { Request } from "../server"
 import { accessQueueM } from "../server"
@@ -107,6 +108,8 @@ function toArray<R, E>(_: Routes<R, E>): readonly RouteFn<R, E>[] {
 
 export const create: Routes<unknown, never> = new Empty()
 
+export const isRunning = new F.FiberRef<boolean>(false, identity, (a, b) => a && b)
+
 export function drain<R>(_: Routes<R, never>) {
   const routes = toArray(_)
 
@@ -128,7 +131,11 @@ export function drain<R>(_: Routes<R, never>) {
     processFn,
     T.chain((process) =>
       accessQueueM((queue) =>
-        pipe(queue.take, T.chain(flow(process, T.fork)), T.forever)
+        pipe(
+          isRunning,
+          F.set(true),
+          T.andThen(pipe(queue.take, T.chain(flow(process, T.fork)), T.forever))
+        )
       )
     )
   )

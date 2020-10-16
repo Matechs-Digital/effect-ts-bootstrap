@@ -18,9 +18,11 @@ export interface HTTPServerConfig {
 
 export const HTTPServerConfig = has<HTTPServerConfig>()
 
-export const { config: accessConfigM } = T.deriveAccessM(HTTPServerConfig)(["config"])
+export const { config: accessServerConfigM } = T.deriveAccessM(HTTPServerConfig)([
+  "config"
+])
 
-export function config(
+export function serverConfig(
   config: HTTPServerConfig["config"]
 ): L.Layer<unknown, never, Has<HTTPServerConfig>> {
   return L.create(HTTPServerConfig).pure({ config })
@@ -45,7 +47,7 @@ export const RequestQueue = has<RequestQueue>()
 export const { queue: accessQueueM } = T.deriveAccessM(RequestQueue)(["queue"])
 export const { server: accessServerM } = T.deriveAccessM(Server)(["server"])
 
-export const Live = pipe(
+export const LiveHTTP = pipe(
   Q.makeUnbounded<Request>(),
   T.chain((queue) =>
     pipe(
@@ -58,7 +60,7 @@ export const Live = pipe(
     )
   ),
   T.tap(({ server }) =>
-    accessConfigM(({ host, port }) =>
+    accessServerConfigM(({ host, port }) =>
       T.effectAsync<unknown, never, void>((cb) => {
         function clean() {
           server.removeListener("error", onErr)
@@ -83,15 +85,13 @@ export const Live = pipe(
     pipe(
       T.tuple(
         T.result(
-          T.effectTotal(() => {
-            T.effectAsync<unknown, never, void>((cb) => {
-              server.close((err) => {
-                if (err) {
-                  cb(T.die(err))
-                } else {
-                  cb(T.unit)
-                }
-              })
+          T.effectAsync<unknown, never, void>((cb) => {
+            server.close((err) => {
+              if (err) {
+                cb(T.die(err))
+              } else {
+                cb(T.unit)
+              }
             })
           })
         ),

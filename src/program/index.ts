@@ -1,7 +1,13 @@
+import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
+import { fiberContext } from "@effect-ts/core/Effect"
+import { pretty } from "@effect-ts/core/Effect/Cause"
+import * as F from "@effect-ts/core/Effect/Fiber"
 import * as L from "@effect-ts/core/Effect/Layer"
+import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe } from "@effect-ts/core/Function"
 
+import { assertFailure } from "../../test/utils/assertions"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
 import { accessClientM, PgPoolLive, provideClient, TestMigration } from "../db"
 import { TestContainersLive } from "../dev/containers"
@@ -49,15 +55,32 @@ export const addBar = HTTP.addRoute((r) => r.req.url === "/bar")(
 
 export const App = pipe(HTTP.create, addHome, addBar, Auth.add, HTTP.drain)
 
+export function makeAppFiber() {
+  return pipe(
+    App,
+    T.fork,
+    M.makeInterruptible(F.interrupt),
+    M.map((fiber) => ({ fiber }))
+  )
+}
+
+export interface AppFiber {
+  fiber: F.FiberContext<never, never>
+}
+
+export const AppFiber = has<AppFiber>()
+
+export const AppFiberLive = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
+
 const Bootstrap = pipe(
-  L.allPar(HTTP.Live, LiveBar, UserPersistenceLive, CredentialPersistenceLive),
+  L.allPar(HTTP.LiveHTTP, LiveBar, UserPersistenceLive, CredentialPersistenceLive),
   L.using(TestMigration("main")),
   L.using(L.allPar(CryptoLive, PgPoolLive("main"))),
   L.using(PgConfigTest("main")("dev")),
   L.using(TestContainersLive("dev")),
   L.using(
     L.allPar(
-      HTTP.config({
+      HTTP.serverConfig({
         host: "0.0.0.0",
         port: 8081
       }),
