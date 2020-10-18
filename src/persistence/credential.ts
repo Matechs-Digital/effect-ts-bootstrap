@@ -1,60 +1,68 @@
+import "@effect-ts/core/Operators"
+
 import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
-import { flow, pipe } from "@effect-ts/core/Function"
 
 import { hashPassword } from "../crypto"
 import { query } from "../db"
+import type { Id } from "../model/common"
 import { encodeId, validateId } from "../model/common"
 import type { CreateCredential, UpdateCredential } from "../model/credential"
-import { decodeCredential, validateCreateCredential } from "../model/credential"
+import {
+  decodeCredential,
+  validateCreateCredential,
+  validateUpdateCredential
+} from "../model/credential"
 
 export class CredentialNotFound {
   readonly _tag = "CredentialNotFound"
 }
 
 export const makeCredentialPersistence = () => ({
-  getCredential: flow(
-    validateId,
-    T.chain(encodeId),
-    T.chain(({ id }) =>
-      query("main")(`SELECT * FROM "public"."credentials" WHERE "id" = $1::integer`, id)
-    ),
-    T.chain((_) =>
-      _.rows.length > 0 ? T.succeed(_.rows[0]) : T.fail(new CredentialNotFound())
-    ),
-    T.chain(flow(decodeCredential, T.orDie))
-  ),
-  createCredential: (_: CreateCredential) =>
-    pipe(
-      T.do,
-      T.tap(() => validateCreateCredential(_)),
-      T.bind("hash", () => hashPassword(_.password)),
-      T.chain(({ hash }) =>
+  getCredential: (i: Id) =>
+    T.gen(function* (_) {
+      yield* _(validateId(i))
+      const { id } = yield* _(encodeId(i))
+      const result = yield* _(
+        query("main")(
+          `SELECT * FROM "public"."credentials" WHERE "id" = $1::integer`,
+          id
+        )
+      )
+      const credential = yield* _(
+        result.rows.length > 0
+          ? T.succeed(result.rows[0])
+          : T.fail(new CredentialNotFound())
+      )
+      return yield* _(credential["|>"](decodeCredential)["|>"](T.orDie))
+    }),
+  createCredential: (i: CreateCredential) =>
+    T.gen(function* (_) {
+      yield* _(validateCreateCredential(i))
+      const hash = yield* _(hashPassword(i.password))
+      const result = yield* _(
         query("main")(
           `INSERT INTO "public"."credentials" ("userId", "hash") VALUES ($1::integer, $2::text) RETURNING *`,
-          _.userId,
+          i.userId,
           hash
         )
-      ),
-      T.map((_) => _.rows[0]),
-      T.chain(flow(decodeCredential, T.orDie))
-    ),
-  updateCredential: (_: UpdateCredential) =>
-    pipe(
-      T.do,
-      T.tap(() => validateCreateCredential(_)),
-      T.bind("hash", () => hashPassword(_.password)),
-      T.chain(({ hash }) =>
+      )
+      return yield* _(result.rows[0]["|>"](decodeCredential)["|>"](T.orDie))
+    }),
+  updateCredential: (i: UpdateCredential) =>
+    T.gen(function* (_) {
+      yield* _(validateUpdateCredential(i))
+      const hash = yield* _(hashPassword(i.password))
+      const result = yield* _(
         query("main")(
           `UPDATE "public"."credentials" SET "hash" = $1::text WHERE "id" = $2::integer RETURNING *`,
           hash,
-          _.id
+          i.id
         )
-      ),
-      T.map((_) => _.rows[0]),
-      T.chain(flow(decodeCredential, T.orDie))
-    )
+      )
+      return yield* _(result.rows[0]["|>"](decodeCredential)["|>"](T.orDie))
+    })
 })
 
 export interface CredentialPersistence
