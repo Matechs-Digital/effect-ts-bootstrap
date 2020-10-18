@@ -5,6 +5,7 @@ import * as T from "@effect-ts/core/Effect"
 import type { Clock } from "@effect-ts/core/Effect/Clock"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
+import { identity } from "@effect-ts/core/Function"
 import type * as PG from "pg"
 
 import { deriveTenants } from "../tenants"

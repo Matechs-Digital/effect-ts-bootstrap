@@ -7,7 +7,7 @@ import { pipe } from "@effect-ts/core/Function"
 
 import { addAuthMiddleware, addRegistration, authenticatedUser } from "../api"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
-import { accessClientM, PgPoolLive, provideClient, TestMigration } from "../db"
+import { PgClient, PgPoolLive, provideClient, TestMigration } from "../db"
 import { TestContainersLive } from "../dev/containers"
 import { PgConfigTest } from "../dev/db"
 import * as HTTP from "../http"
@@ -18,17 +18,20 @@ import { accessBarM, LiveBar } from "../program/Bar"
 
 export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
   pipe(
-    accessClientM("main")((client) =>
-      pipe(
+    T.gen(function* (_) {
+      const { client } = yield* _(PgClient("main"))
+
+      const result = yield* _(
         T.fromPromiseDie(() =>
           client.query(
             "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
             ["users"]
           )
-        ),
-        T.map((_) => _.rows)
+        )
       )
-    ),
+
+      return result.rows
+    }),
     provideClient("main"),
     T.result,
     T.chain((ex) =>

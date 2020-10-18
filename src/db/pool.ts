@@ -5,7 +5,7 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import type { Managed } from "@effect-ts/core/Effect/Managed"
 import * as M from "@effect-ts/core/Effect/Managed"
 import * as S from "@effect-ts/core/Effect/Schedule"
-import { pipe } from "@effect-ts/core/Function"
+import { identity, pipe } from "@effect-ts/core/Function"
 import * as PG from "pg"
 
 import { deriveTenants } from "../tenants"
@@ -28,6 +28,13 @@ export const PgPool = <K extends Databases>(_: K) => has<PgPool<K>>().setKey(poo
 export function withPoolClientM<K extends Databases>(_: K) {
   return <R, E, A>(body: (_: PG.PoolClient) => T.Effect<R, E, A>) =>
     T.accessServiceM(PgPool(_))((_) => _.withPoolClientM(body))
+}
+
+export function clientFromPool<K extends Databases>(db: K) {
+  return pipe(
+    M.fromEffect(T.accessService(PgPool(db))((_) => _.managedClient)),
+    M.chain(identity)
+  )
 }
 
 export const PgPoolLive = <K extends Databases>(db: K) =>

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "downlevelIteration": true,
     "lib": ["ES2019"],
     "target": "ES5",
     "strict": true,
