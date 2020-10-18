@@ -1,8 +1,7 @@
-import "@effect-ts/core/Operators"
-
 import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
+import { pipe } from "@effect-ts/core/Function"
 
 import { hashPassword } from "../crypto"
 import { query } from "../db"
@@ -35,7 +34,7 @@ export const makeCredentialPersistence = () => ({
           ? T.succeed(result.rows[0])
           : T.fail(new CredentialNotFound())
       )
-      return yield* _(credential["|>"](decodeCredential)["|>"](T.orDie))
+      return yield* _(pipe(credential, decodeCredential, T.orDie))
     }),
   createCredential: (i: CreateCredential) =>
     T.gen(function* (_) {
@@ -48,7 +47,7 @@ export const makeCredentialPersistence = () => ({
           hash
         )
       )
-      return yield* _(result.rows[0]["|>"](decodeCredential)["|>"](T.orDie))
+      return yield* _(pipe(result.rows[0], decodeCredential, T.orDie))
     }),
   updateCredential: (i: UpdateCredential) =>
     T.gen(function* (_) {
@@ -61,7 +60,7 @@ export const makeCredentialPersistence = () => ({
           i.id
         )
       )
-      return yield* _(result.rows[0]["|>"](decodeCredential)["|>"](T.orDie))
+      return yield* _(pipe(result.rows[0], decodeCredential, T.orDie))
     })
 })
 
