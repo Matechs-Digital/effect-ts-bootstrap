@@ -46,7 +46,7 @@ export const readJsonBody = pipe(
   )
 )
 
-export function morphicBody<L, A>(
+export function jsonBody<L, A>(
   _: M.M<{}, L, A>,
   collector: (_: DecodingError) => Option<string> = allErrors
 ) {
@@ -72,7 +72,7 @@ export function morphicBody<L, A>(
   )
 }
 
-export function morphicResponse<L, A>(_: M.M<{}, L, A>) {
+export function jsonResponse<L, A>(_: M.M<{}, L, A>) {
   const encode = encoder(_).encode
 
   return flow(
