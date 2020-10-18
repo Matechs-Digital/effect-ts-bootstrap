@@ -1,0 +1,7 @@
+{
+  "Pipe Operator": {
+    "prefix": "p",
+    "body": ["[\"|>\"]"],
+    "description": "Pipe Operator"
+  }
+}
