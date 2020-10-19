@@ -14,7 +14,6 @@ import { has } from "@effect-ts/system/Has"
 export interface DbConnection {
   readonly put: (k: string, v: string) => T.UIO<void>
   readonly get: (k: string) => T.IO<NoSuchElementException, string>
-  readonly clear: T.UIO<void>
 }
 
 // Tag<DbConnection>
@@ -23,49 +22,52 @@ export const DbConnection = has<DbConnection>()
 // simulate a connection to a message broker
 export interface BrokerConnection {
   readonly send: (message: string) => T.UIO<void>
-  readonly clear: T.UIO<void>
 }
 
 // Tag<BrokerConnection>
 export const BrokerConnection = has<BrokerConnection>()
 
 // Database Live Layer
-export const DbLive = T.gen(function* (_) {
-  const ref = yield* _(Ref.makeRef<Map.Map<string, string>>(Map.empty))
-
-  const DbConnection: DbConnection = {
-    get: (k) => ref.get["|>"](T.map(Map.lookup(k)))["|>"](T.chain(T.getOrFail)),
-    put: (k, v) => ref["|>"](Ref.update(Map.insert(k, v))),
-    clear: ref.set(Map.empty)
-  }
-
-  return DbConnection
-})
-  ["|>"](M.make((_) => _.clear)) // make managed
-  ["|>"](L.fromManaged(DbConnection)) // construct layer
-
-// Broket Live Layer
-export const BrokerLive = T.gen(function* (_) {
-  const ref = yield* _(Ref.makeRef<Array.Array<string>>(Array.empty))
-
-  const BrokerConnection: BrokerConnection = {
-    send: (message) => ref["|>"](Ref.update(Array.snoc(message))),
-    clear: ref.get["|>"](
-      T.chain((messages) =>
-        T.effectTotal(() => {
-          console.log(`Flush:`)
-          messages.forEach((message) => {
-            console.log("- " + message)
-          })
-        })
+export const DbLive = L.fromManaged(DbConnection)(
+  M.gen(function* (_) {
+    const ref = yield* _(
+      Ref.makeRef<Map.Map<string, string>>(Map.empty)["|>"](
+        M.make((ref) => ref.set(Map.empty))
       )
     )
-  }
 
-  return BrokerConnection
-})
-  ["|>"](M.make((_) => _.clear)) // make managed
-  ["|>"](L.fromManaged(BrokerConnection)) // construct layer
+    return <DbConnection>{
+      get: (k) => ref.get["|>"](T.map(Map.lookup(k)))["|>"](T.chain(T.getOrFail)),
+      put: (k, v) => ref["|>"](Ref.update(Map.insert(k, v)))
+    }
+  })
+)
+
+// Broket Live Layer
+export const BrokerLive = L.fromManaged(BrokerConnection)(
+  M.gen(function* (_) {
+    const ref = yield* _(
+      Ref.makeRef<Array.Array<string>>(Array.empty)["|>"](
+        M.make((ref) =>
+          ref.get["|>"](
+            T.chain((messages) =>
+              T.effectTotal(() => {
+                console.log(`Flush:`)
+                messages.forEach((message) => {
+                  console.log("- " + message)
+                })
+              })
+            )
+          )
+        )
+      )
+    )
+
+    return <BrokerConnection>{
+      send: (message) => ref["|>"](Ref.update(Array.snoc(message)))
+    }
+  })
+)
 
 // Main Live Layer
 export const ProgramLive = L.all(DbLive, BrokerLive)
