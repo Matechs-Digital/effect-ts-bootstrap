@@ -29,7 +29,7 @@ export const makeUserPersistence = () => ({
     T.chain((_) =>
       _.rows.length > 0 ? T.succeed(_.rows[0]) : T.fail(new UserNotFound())
     ),
-    T.chain(flow(decodeUser, T.orDie))
+    T.chain(decodeUser[">>"](T.orDie))
   ),
   createUser: flow(
     validateCreateUser,
@@ -38,7 +38,7 @@ export const makeUserPersistence = () => ({
       query("main")(`INSERT INTO users (email) VALUES ($1::text) RETURNING *`, email)
     ),
     T.map((_) => _.rows[0]),
-    T.chain(flow(decodeUser, T.orDie))
+    T.chain(decodeUser[">>"](T.orDie))
   ),
   updateUser: flow(
     validateUser,
@@ -51,7 +51,7 @@ export const makeUserPersistence = () => ({
       )
     ),
     T.map((_) => _.rows[0]),
-    T.chain(flow(decodeUser, T.orDie))
+    T.chain(decodeUser[">>"](T.orDie))
   )
 })
 
