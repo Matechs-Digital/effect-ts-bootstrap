@@ -1,12 +1,12 @@
 {
   "Pipe Operator |": {
     "prefix": "|",
-    "body": ["[\"|>\"]"],
+    "body": ["[\"|>\"]()"],
     "description": "Pipe Operator"
   },
   "Flow Operator": {
     "prefix": ">",
-    "body": ["[\">>\"]"],
+    "body": ["[\">>\"]()"],
     "description": "Flow Operator"
   },
   "Operators Import": {
