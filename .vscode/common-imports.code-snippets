@@ -98,5 +98,10 @@
     "prefix": "+O",
     "body": ["import * as O from \"@effect-ts/core/Classic/Option\""],
     "description": "Option as O"
+  },
+  "Fiber": {
+    "prefix": "+F",
+    "body": ["import * as F from \"@effect-ts/core/Effect/Fiber\""],
+    "description": "Fiber as F"
   }
 }
