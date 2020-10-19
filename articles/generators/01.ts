@@ -67,48 +67,30 @@ export const BrokerLive = T.gen(function* (_) {
   ["|>"](M.make((_) => _.clear)) // make managed
   ["|>"](L.fromManaged(BrokerConnection)) // construct layer
 
-// Main Program
-export function makeProgram({ get, put }: DbConnection, { send }: BrokerConnection) {
-  return {
-    main: T.gen(function* (_) {
-      yield* _(put("ka", "a"))
-      yield* _(put("kb", "b"))
-      yield* _(put("kc", "c"))
-
-      const a = yield* _(get("ka"))
-      const b = yield* _(get("kb"))
-      const c = yield* _(get("kc"))
-
-      const s = `${a}-${b}-${c}`
-
-      yield* _(T.sleep(20_000))
-
-      yield* _(send(s))
-
-      return s
-    })
-  }
-}
-
-// Main Program Type
-export interface Program extends ReturnType<typeof makeProgram> {}
-
-// Tag<Program>
-export const Program = has<Program>()
-
-// Live Program
-export const ProgramLive = L.fromConstructor(Program)(makeProgram)(
-  // wrap Db
-  DbConnection,
-  // wrap Broker
-  BrokerConnection
-)
-
 // Main Live Layer
-export const MainLive = ProgramLive["|>"](L.using(L.all(DbLive, BrokerLive)))
+export const ProgramLive = L.all(DbLive, BrokerLive)
 
 // Program Entry
-export const { main } = T.deriveLifted(Program)([], ["main"], [])
+export const main = T.gen(function* (_) {
+  const { get, put } = yield* _(DbConnection)
+  const { send } = yield* _(BrokerConnection)
+
+  yield* _(put("ka", "a"))
+  yield* _(put("kb", "b"))
+  yield* _(put("kc", "c"))
+
+  const a = yield* _(get("ka"))
+  const b = yield* _(get("kb"))
+  const c = yield* _(get("kc"))
+
+  const s = `${a}-${b}-${c}`
+
+  yield* _(T.sleep(20_000))
+
+  yield* _(send(s))
+
+  return s
+})
 
 // Generic Listen for process sigterm & sigint
 export function listenForProcessExit<R, E, A>(self: T.Effect<R, E, A>) {
@@ -144,4 +126,4 @@ export function listenForProcessExit<R, E, A>(self: T.Effect<R, E, A>) {
 }
 
 // run the program and print the output
-main["|>"](T.provideSomeLayer(MainLive))["|>"](listenForProcessExit)["|>"](T.runMain)
+main["|>"](T.provideSomeLayer(ProgramLive))["|>"](listenForProcessExit)["|>"](T.runMain)
