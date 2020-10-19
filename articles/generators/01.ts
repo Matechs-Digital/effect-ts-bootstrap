@@ -119,7 +119,7 @@ export function listenForProcessExit<R, E, A>(self: T.Effect<R, E, A>) {
         process.removeListener("SIGTERM", handler)
       })
 
-    // allocates a managed of wich release is deferred
+    // allocates a managed with deferred release
     yield* _(addHandlers["|>"](M.make(removeHandlers)))
 
     // join the fiber waiting for an exit
