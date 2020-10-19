@@ -282,27 +282,27 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@effect-ts/core@^0.5.16":
-  version "0.5.16"
-  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.5.16.tgz#87dcf38cbfbf0537f0408ee221f6290a9ed137fd"
-  integrity sha512-Su221XXeqbZN3VD+F9j4a8qA+xEkH7GiB3WbBcns5hGq9ki0J3ku5Q/Of6r2W5QuxFqakkKNfYaBzwJWvGH2eA==
+"@effect-ts/core@^0.5.21":
+  version "0.5.21"
+  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.5.21.tgz#2f5c326b0317a2a81700f03a39b8b6b298594acf"
+  integrity sha512-SDJcdggzmNFAM2hnqu3nMBfHswnBVbHTg1ST9maI/UdlM+oGEg3MKf2XkBZHZrsUfHWulkIEePpw6grO6iPMfA==
   dependencies:
     "@effect-ts/system" "^0.3.12"
 
-"@effect-ts/monocle@^0.4.16":
-  version "0.4.16"
-  resolved "https://registry.yarnpkg.com/@effect-ts/monocle/-/monocle-0.4.16.tgz#ce04637c8f499092e8e47dc6d35a88c4024bff05"
-  integrity sha512-v0lrB29WeQRFfpKG1ydByDVEf7DWRyO8fFllh/ro1v4ylOTs8GVH8c1Fe4F0vW2Bq4Ros2RPq3xghOHll7afVg==
+"@effect-ts/monocle@^0.4.21":
+  version "0.4.21"
+  resolved "https://registry.yarnpkg.com/@effect-ts/monocle/-/monocle-0.4.21.tgz#c65bc439f7ace6281f0055a08350067e6a688a9b"
+  integrity sha512-ZcSHxMyPnXvBQ1wCkzH6nHF2OKJJTVLflLtBBweKuO5Cc3xiSGF0tGhBt4V5M74XiCOq4KIaqGMXyMXZGYX9dg==
   dependencies:
-    "@effect-ts/core" "^0.5.16"
+    "@effect-ts/core" "^0.5.21"
 
-"@effect-ts/morphic@^0.3.16":
-  version "0.3.16"
-  resolved "https://registry.yarnpkg.com/@effect-ts/morphic/-/morphic-0.3.16.tgz#39f92bad2f159b3b54a3a026181f5208d49da608"
-  integrity sha512-ofGn90vVNROsWFcgmGJNpBenR9P9ixQUk5qC+AHsh2dGoY17wousOpaArVwGhK6DYblzG3x8zQs2Rz/7qF4izg==
+"@effect-ts/morphic@^0.3.21":
+  version "0.3.21"
+  resolved "https://registry.yarnpkg.com/@effect-ts/morphic/-/morphic-0.3.21.tgz#0a908c890d53727a601cd3af81a18bfeaa52a47f"
+  integrity sha512-Nyijdt23lKRoaaIis10S28Xn5IQdwr7aw43T45t/SnGsc5ZwxUVOSNZSp4OUxkkjMpgUC5VBkPLdOHEsyUk66w==
   dependencies:
-    "@effect-ts/core" "^0.5.16"
-    "@effect-ts/monocle" "^0.4.16"
+    "@effect-ts/core" "^0.5.21"
+    "@effect-ts/monocle" "^0.4.21"
 
 "@effect-ts/system@^0.3.12":
   version "0.3.12"

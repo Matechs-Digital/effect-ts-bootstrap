@@ -1,3 +1,5 @@
+import "@effect-ts/core/Operators"
+
 import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"

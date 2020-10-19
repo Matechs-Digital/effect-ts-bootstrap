@@ -1,7 +1,8 @@
+import "@effect-ts/core/Operators"
+
 import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
-import { pipe } from "@effect-ts/core/Function"
 
 import { transaction } from "../db"
 import type { Register } from "../model/api"
@@ -10,11 +11,9 @@ import { createUser } from "./user"
 
 export const makeTransactions = () => ({
   register: ({ email, password }: Register) =>
-    pipe(
-      createUser({ email }),
-      T.tap((user) => createCredential({ userId: user.id, password })),
-      transaction("main")
-    )
+    createUser({ email })
+      ["|>"](T.tap((user) => createCredential({ userId: user.id, password })))
+      ["|>"](transaction("main"))
 })
 
 export interface Transactions extends ReturnType<typeof makeTransactions> {}

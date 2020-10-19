@@ -1,3 +1,5 @@
+import "@effect-ts/core/Operators"
+
 import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as F from "@effect-ts/core/Effect/Fiber"
@@ -43,8 +45,7 @@ export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
 )
 
 export const addBar = HTTP.addRoute((r) => r.req.url === "/bar")(({ res }) =>
-  pipe(
-    authenticatedUser,
+  authenticatedUser["|>"](
     T.chain((user) =>
       accessBarM((bar) =>
         T.delay(200)(
@@ -105,5 +106,5 @@ const Bootstrap = pipe(
 
 // main function (unsafe)
 export function main() {
-  return pipe(App, T.provideSomeLayer(Bootstrap), T.runMain)
+  return App["|>"](T.provideSomeLayer(Bootstrap))["|>"](T.runMain)
 }
