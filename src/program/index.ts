@@ -6,17 +6,17 @@ import * as F from "@effect-ts/core/Effect/Fiber"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe } from "@effect-ts/core/Function"
+import type { Erase } from "@effect-ts/core/Utils"
 
 import { addAuthMiddleware, addRegistration, authenticatedUser } from "../api"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
-import { PgClient, PgPoolLive, provideClient, TestMigration } from "../db"
+import { DbLive, PgClient, PgPoolLive, provideClient, TestMigration } from "../db"
 import { TestContainersLive } from "../dev/containers"
 import { PgConfigTest } from "../dev/db"
 import * as HTTP from "../http"
 import { CredentialPersistenceLive } from "../persistence/credential"
 import { TransactionsLive } from "../persistence/transactions"
 import { UserPersistenceLive } from "../persistence/user"
-import { accessBarM, LiveBar } from "../program/Bar"
 
 export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
   pipe(
@@ -44,64 +44,37 @@ export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
   )
 )
 
-export const addBar = HTTP.addRoute((r) => r.req.url === "/bar")(({ res }) =>
-  authenticatedUser["|>"](
-    T.chain((user) =>
-      accessBarM((bar) =>
-        T.delay(200)(
-          T.effectTotal(() => {
-            res.end(`${user}: ${bar}`)
-          })
-        )
-      )
-    )
-  )
-)
-
 export const App = pipe(
   HTTP.create,
   addHome,
-  addBar,
   addRegistration,
   addAuthMiddleware,
   HTTP.drain
 )
 
-export function makeAppFiber() {
-  return pipe(
-    App,
-    T.fork,
-    M.makeInterruptible(F.interrupt),
-    M.map((fiber) => ({ fiber }))
-  )
-}
+const Persistence = TransactionsLive["|>"](
+  L.using(L.allPar(UserPersistenceLive, CredentialPersistenceLive))
+)
 
-export interface AppFiber {
-  fiber: F.FiberContext<never, never>
-}
+const Crypto = CryptoLive["|>"](L.using(PBKDF2ConfigLive))
 
-export const AppFiber = has<AppFiber>()
+const Db = DbLive("main")
+  ["|>"](L.using(TestMigration("main")))
+  ["|>"](L.using(PgPoolLive("main")))
+  ["|>"](L.using(PgConfigTest("main")("dev")))
+  ["|>"](L.using(TestContainersLive("dev")))
 
-export const AppFiberLive = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
-
-const Bootstrap = pipe(
-  TransactionsLive,
+const Server = HTTP.LiveHTTP["|>"](
   L.using(
-    L.allPar(HTTP.LiveHTTP, LiveBar, UserPersistenceLive, CredentialPersistenceLive)
-  ),
-  L.using(TestMigration("main")),
-  L.using(L.allPar(CryptoLive, PgPoolLive("main"))),
-  L.using(PgConfigTest("main")("dev")),
-  L.using(TestContainersLive("dev")),
-  L.using(
-    L.allPar(
-      HTTP.serverConfig({
-        host: "0.0.0.0",
-        port: 8081
-      }),
-      PBKDF2ConfigLive
-    )
+    HTTP.serverConfig({
+      host: "0.0.0.0",
+      port: 8081
+    })
   )
+)
+
+const Bootstrap = Persistence["|>"](L.using(Crypto))["|>"](
+  L.using(L.allPar(Db, Server))
 )
 
 // main function (unsafe)

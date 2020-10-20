@@ -1,20 +1,22 @@
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
-import * as FR from "@effect-ts/core/Effect/FiberRef"
+import * as F from "@effect-ts/core/Effect/Fiber"
 import * as L from "@effect-ts/core/Effect/Layer"
+import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe } from "@effect-ts/core/Function"
 import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
+import { has } from "@effect-ts/system/Has"
 import * as fc from "fast-check"
 
-import { CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
+import { Crypto, CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
 import {
   accessClientM,
-  fromPool,
+  Db,
+  DbLive,
   PgPoolLive,
   provideClient,
-  TestMigration,
-  transaction
+  TestMigration
 } from "../src/db"
 import { TestContainersLive } from "../src/dev/containers"
 import { PgConfigTest } from "../src/dev/db"
@@ -24,41 +26,67 @@ import { Email, EmailField, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import {
   createCredential,
+  CredentialPersistence,
   CredentialPersistenceLive,
   updateCredential
 } from "../src/persistence/credential"
-import { TransactionsLive } from "../src/persistence/transactions"
+import { register, TransactionsLive } from "../src/persistence/transactions"
 import {
   createUser,
   getUser,
   updateUser,
   UserPersistenceLive
 } from "../src/persistence/user"
-import { AppFiber, AppFiberLive } from "../src/program"
-import { LiveBar } from "../src/program/Bar"
+import { App } from "../src/program"
 import { assertSuccess } from "./utils/assertions"
 import { testRuntime } from "./utils/runtime"
+
+export function makeAppFiber() {
+  return pipe(
+    App,
+    T.fork,
+    M.makeInterruptible(F.interrupt),
+    M.map((fiber) => ({ fiber }))
+  )
+}
+
+export interface AppFiber {
+  fiber: F.FiberContext<never, never>
+}
+
+export const AppFiber = has<AppFiber>()
+
+export const AppFiberLive = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
+
+const Persistence_ = TransactionsLive["|>"](
+  L.using(L.allPar(UserPersistenceLive, CredentialPersistenceLive))
+)
+
+const Crypto_ = CryptoLive["|>"](L.using(PBKDF2ConfigTest))
+
+const Db_ = DbLive("main")
+  ["|>"](L.using(TestMigration("main")))
+  ["|>"](L.using(PgPoolLive("main")))
+  ["|>"](L.using(PgConfigTest("main")("integration")))
+  ["|>"](L.using(TestContainersLive("integration")))
+
+const Server_ = LiveHTTP["|>"](
+  L.using(
+    serverConfig({
+      host: "0.0.0.0",
+      port: 8082
+    })
+  )
+)
+
+const Bootstrap_ = Persistence_["|>"](L.using(Crypto_))["|>"](
+  L.using(L.allPar(Db_, Server_))
+)
 
 describe("Integration Suite", () => {
   const { runPromiseExit } = pipe(
     AppFiberLive,
-    L.using(TransactionsLive),
-    L.using(
-      L.allPar(UserPersistenceLive, CredentialPersistenceLive, LiveBar, LiveHTTP)
-    ),
-    L.using(TestMigration("main")),
-    L.using(L.allPar(PgPoolLive("main"), CryptoLive)),
-    L.using(
-      L.allPar(
-        PgConfigTest("main")("integration"),
-        PBKDF2ConfigTest,
-        serverConfig({
-          host: "0.0.0.0",
-          port: 8082
-        })
-      )
-    ),
-    L.using(TestContainersLive("integration")),
+    L.using(Bootstrap_),
     testRuntime
   )({
     open: 30_000,
@@ -184,7 +212,7 @@ describe("Integration Suite", () => {
   describe("User Api", () => {
     it("creates a new user", async () => {
       const result = await runPromiseExit(
-        pipe(createUser({ email: Email.wrap("ma@example.org") }), fromPool("main"))
+        pipe(createUser({ email: Email.wrap("ma@example.org") }), provideClient("main"))
       )
 
       const nameAndId = pipe(User.lens, Lens.props("email", "id"))
@@ -196,7 +224,7 @@ describe("Integration Suite", () => {
 
     it("fail to create a new user with an empty email", async () => {
       const result = await runPromiseExit(
-        pipe(createUser({ email: Email.wrap("") }), fromPool("main"))
+        pipe(createUser({ email: Email.wrap("") }), provideClient("main"))
       )
 
       expect(result).toEqual(
@@ -208,16 +236,22 @@ describe("Integration Suite", () => {
 
     it("transactional dsl handles success/failure with commit/rollback", async () => {
       const result = await runPromiseExit(
-        pipe(
-          T.tuple(
-            createUser({ email: Email.wrap("USER_0@example.org") }),
-            createUser({ email: Email.wrap("USER_1@example.org") }),
-            createUser({ email: Email.wrap("USER_2@example.org") })
-          ),
-          T.tap(() => T.fail("error")),
-          transaction("main"),
-          fromPool("main")
-        )
+        T.gen(function* (_) {
+          const { transaction } = yield* _(Db("main"))
+
+          return yield* _(
+            pipe(
+              T.tuple(
+                createUser({ email: Email.wrap("USER_0@example.org") }),
+                createUser({ email: Email.wrap("USER_1@example.org") }),
+                createUser({ email: Email.wrap("USER_2@example.org") })
+              ),
+              T.tap(() => T.fail("error")),
+              transaction,
+              provideClient("main")
+            )
+          )
+        })
       )
 
       expect(result).toEqual(Ex.fail("error"))
@@ -239,15 +273,21 @@ describe("Integration Suite", () => {
       expect(count).toEqual(Ex.succeed(0))
 
       const resultSuccess = await runPromiseExit(
-        pipe(
-          T.tuple(
-            createUser({ email: Email.wrap("USER_0@example.org") }),
-            createUser({ email: Email.wrap("USER_1@example.org") }),
-            createUser({ email: Email.wrap("USER_2@example.org") })
-          ),
-          transaction("main"),
-          fromPool("main")
-        )
+        T.gen(function* (_) {
+          const { transaction } = yield* _(Db("main"))
+
+          return yield* _(
+            pipe(
+              T.tuple(
+                createUser({ email: Email.wrap("USER_0@example.org") }),
+                createUser({ email: Email.wrap("USER_1@example.org") }),
+                createUser({ email: Email.wrap("USER_2@example.org") })
+              ),
+              transaction,
+              provideClient("main")
+            )
+          )
+        })
       )
 
       assertSuccess(resultSuccess)
@@ -280,7 +320,7 @@ describe("Integration Suite", () => {
         pipe(
           getUser({ id: 5 }),
           T.map((_) => _.email),
-          fromPool("main")
+          provideClient("main")
         )
       )
 
@@ -297,7 +337,7 @@ describe("Integration Suite", () => {
             updateUser({ ...user, email: Email.wrap("NewEmail@example.org") })
           ),
           T.map((_) => _.email),
-          fromPool("main")
+          provideClient("main")
         )
       )
 
@@ -310,7 +350,7 @@ describe("Integration Suite", () => {
       const result = await runPromiseExit(
         pipe(
           createCredential({ userId: 5, password: "helloworld000" }),
-          fromPool("main")
+          provideClient("main")
         )
       )
 
@@ -334,7 +374,7 @@ describe("Integration Suite", () => {
       const result = await runPromiseExit(
         pipe(
           updateCredential({ id: 1, userId: 105, password: "helloworld001" }),
-          fromPool("main")
+          provideClient("main")
         )
       )
 
@@ -363,19 +403,17 @@ describe("Integration Suite", () => {
           arbitrary(PasswordField),
           async ({ email }, { password }) => {
             const verify = await runPromiseExit(
-              pipe(
-                createUser({ email }),
-                T.chain((u) =>
-                  createCredential({
-                    password,
-                    userId: u.id
-                  })
-                ),
-                transaction("main"),
-                fromPool("main"),
-                T.chain((_) => verifyPassword(password, _.hash))
-              )
+              T.gen(function* (_) {
+                const { getCredentialByUserId } = yield* _(CredentialPersistence)
+                const { verifyPassword } = yield* _(Crypto)
+
+                const user = yield* _(register({ email, password }))
+                const cred = yield* _(getCredentialByUserId(user.id))
+
+                yield* _(verifyPassword(password, cred.hash))
+              })["|>"](provideClient("main"))
             )
+
             expect(pipe(verify)).toEqual(Ex.unit)
           }
         ),
