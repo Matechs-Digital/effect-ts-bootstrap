@@ -87,7 +87,7 @@ describe("Integration Suite", () => {
 
   describe("Bootstrap", () => {
     it("run simple query", async () => {
-      const program = T.gen(function* (_) {
+      const result = await T.gen(function* (_) {
         const { client } = yield* _(PgClient("main"))
 
         const result = yield* _(
@@ -95,23 +95,26 @@ describe("Integration Suite", () => {
         )
 
         return result.rows[0].name
-      })["|>"](provideClient("main"))
+      })
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
-      expect(await runPromiseExit(program)).toEqual(Ex.succeed("Michael"))
+      expect(result).toEqual(Ex.succeed("Michael"))
     })
 
     it("http server fiber is running", async () => {
-      const result = await runPromiseExit(
-        T.accessServiceM(AppFiber)((_) => _.fiber.getRef(isRouterDraining))
-      )
+      const result = await T.accessServiceM(AppFiber)((_) =>
+        _.fiber.getRef(isRouterDraining)
+      )["|>"](runPromiseExit)
+
       expect(result).toEqual(Ex.succeed(true))
     })
 
     it("check users table structure", async () => {
-      const program = T.gen(function* (_) {
+      const result = await T.gen(function* (_) {
         const { client } = yield* _(PgClient("main"))
 
-        const result = yield* _(
+        const { rows } = yield* _(
           T.fromPromiseDie(() =>
             client.query(
               "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
@@ -120,10 +123,12 @@ describe("Integration Suite", () => {
           )
         )
 
-        return result.rows
-      })["|>"](provideClient("main"))
+        return rows
+      })
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
-      expect(await runPromiseExit(program)).toEqual(
+      expect(result).toEqual(
         Ex.succeed([
           { table_name: "users", column_name: "id", data_type: "integer" },
           {
@@ -146,10 +151,10 @@ describe("Integration Suite", () => {
     })
 
     it("check credentials table structure", async () => {
-      const program = T.gen(function* (_) {
+      const result = await T.gen(function* (_) {
         const { client } = yield* _(PgClient("main"))
 
-        const result = yield* _(
+        const { rows } = yield* _(
           T.fromPromiseDie(() =>
             client.query(
               "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
@@ -158,10 +163,12 @@ describe("Integration Suite", () => {
           )
         )
 
-        return result.rows
-      })["|>"](provideClient("main"))
+        return rows
+      })
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
-      expect(await runPromiseExit(program)).toEqual(
+      expect(result).toEqual(
         Ex.succeed([
           {
             column_name: "id",
