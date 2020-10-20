@@ -3,7 +3,6 @@ import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as F from "@effect-ts/core/Effect/Fiber"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
-import { pipe } from "@effect-ts/core/Function"
 import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import { has } from "@effect-ts/system/Has"
@@ -11,9 +10,9 @@ import * as fc from "fast-check"
 
 import { Crypto, CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
 import {
-  accessClientM,
   Db,
   DbLive,
+  PgClient,
   PgPoolLive,
   provideClient,
   TestMigration
@@ -42,12 +41,9 @@ import { assertSuccess } from "./utils/assertions"
 import { testRuntime } from "./utils/runtime"
 
 export function makeAppFiber() {
-  return pipe(
-    App,
-    T.fork,
-    M.makeInterruptible(F.interrupt),
-    M.map((fiber) => ({ fiber }))
-  )
+  return App["|>"](T.fork)
+    ["|>"](M.makeInterruptible(F.interrupt))
+    ["|>"](M.map((fiber) => ({ fiber })))
 }
 
 export interface AppFiber {
@@ -91,21 +87,17 @@ describe("Integration Suite", () => {
 
   describe("Bootstrap", () => {
     it("run simple query", async () => {
-      const response = await runPromiseExit(
-        pipe(
-          accessClientM("main")((client) =>
-            pipe(
-              T.fromPromiseDie(() =>
-                client.query("SELECT $1::text as name", ["Michael"])
-              ),
-              T.map((_): string => _.rows[0].name)
-            )
-          ),
-          provideClient("main")
-        )
-      )
+      const program = T.gen(function* (_) {
+        const { client } = yield* _(PgClient("main"))
 
-      expect(response).toEqual(Ex.succeed("Michael"))
+        const result = yield* _(
+          T.fromPromiseDie(() => client.query("SELECT $1::text as name", ["Michael"]))
+        )
+
+        return result.rows[0].name
+      })["|>"](provideClient("main"))
+
+      expect(await runPromiseExit(program)).toEqual(Ex.succeed("Michael"))
     })
 
     it("http server fiber is running", async () => {
@@ -116,24 +108,22 @@ describe("Integration Suite", () => {
     })
 
     it("check users table structure", async () => {
-      const response = await runPromiseExit(
-        pipe(
-          accessClientM("main")((client) =>
-            pipe(
-              T.fromPromiseDie(() =>
-                client.query(
-                  "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
-                  ["users"]
-                )
-              ),
-              T.map((_) => _.rows)
-            )
-          ),
-          provideClient("main")
-        )
-      )
+      const program = T.gen(function* (_) {
+        const { client } = yield* _(PgClient("main"))
 
-      expect(response).toEqual(
+        const result = yield* _(
+          T.fromPromiseDie(() =>
+            client.query(
+              "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
+              ["users"]
+            )
+          )
+        )
+
+        return result.rows
+      })["|>"](provideClient("main"))
+
+      expect(await runPromiseExit(program)).toEqual(
         Ex.succeed([
           { table_name: "users", column_name: "id", data_type: "integer" },
           {
@@ -156,24 +146,22 @@ describe("Integration Suite", () => {
     })
 
     it("check credentials table structure", async () => {
-      const response = await runPromiseExit(
-        pipe(
-          accessClientM("main")((client) =>
-            pipe(
-              T.fromPromiseDie(() =>
-                client.query(
-                  "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
-                  ["credentials"]
-                )
-              ),
-              T.map((_) => _.rows)
-            )
-          ),
-          provideClient("main")
-        )
-      )
+      const program = T.gen(function* (_) {
+        const { client } = yield* _(PgClient("main"))
 
-      expect(response).toEqual(
+        const result = yield* _(
+          T.fromPromiseDie(() =>
+            client.query(
+              "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
+              ["credentials"]
+            )
+          )
+        )
+
+        return result.rows
+      })["|>"](provideClient("main"))
+
+      expect(await runPromiseExit(program)).toEqual(
         Ex.succeed([
           {
             column_name: "id",
@@ -207,21 +195,21 @@ describe("Integration Suite", () => {
 
   describe("User Api", () => {
     it("creates a new user", async () => {
-      const result = await runPromiseExit(
-        pipe(createUser({ email: Email.wrap("ma@example.org") }), provideClient("main"))
-      )
+      const result = await createUser({ email: Email.wrap("ma@example.org") })
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
-      const nameAndId = pipe(User.lens, Lens.props("email", "id"))
+      const nameAndId = User.lens["|>"](Lens.props("email", "id"))
 
-      expect(pipe(result, Ex.map(nameAndId.get))).toEqual(
+      expect(result["|>"](Ex.map(nameAndId.get))).toEqual(
         Ex.succeed({ id: 1, email: "ma@example.org" })
       )
     })
 
     it("fail to create a new user with an empty email", async () => {
-      const result = await runPromiseExit(
-        pipe(createUser({ email: Email.wrap("") }), provideClient("main"))
-      )
+      const result = await createUser({ email: Email.wrap("") })
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
       expect(result).toEqual(
         Ex.fail(
@@ -231,60 +219,55 @@ describe("Integration Suite", () => {
     })
 
     it("transactional dsl handles success/failure with commit/rollback", async () => {
-      const result = await runPromiseExit(
-        T.gen(function* (_) {
-          const { transaction } = yield* _(Db("main"))
+      const result = await T.gen(function* (_) {
+        const { transaction } = yield* _(Db("main"))
 
-          return yield* _(
-            pipe(
-              T.tuple(
-                createUser({ email: Email.wrap("USER_0@example.org") }),
-                createUser({ email: Email.wrap("USER_1@example.org") }),
-                createUser({ email: Email.wrap("USER_2@example.org") })
-              ),
-              T.tap(() => T.fail("error")),
-              transaction,
-              provideClient("main")
-            )
+        return yield* _(
+          T.tuple(
+            createUser({ email: Email.wrap("USER_0@example.org") }),
+            createUser({ email: Email.wrap("USER_1@example.org") }),
+            createUser({ email: Email.wrap("USER_2@example.org") })
           )
-        })
-      )
+            ["|>"](T.tap(() => T.fail("error")))
+            ["|>"](transaction)
+        )
+      })
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
       expect(result).toEqual(Ex.fail("error"))
 
-      const count = await runPromiseExit(
-        pipe(
-          accessClientM("main")((client) =>
-            pipe(
-              T.fromPromiseDie(() =>
-                client.query("SELECT COUNT(*) FROM users WHERE email LIKE 'USER_%'")
-              ),
-              T.map((_) => parseInt(_.rows[0].count))
-            )
-          ),
-          provideClient("main")
+      const userCount = T.gen(function* (_) {
+        const { client } = yield* _(PgClient("main"))
+
+        const result = yield* _(
+          T.fromPromiseDie(() =>
+            client.query("SELECT COUNT(*) FROM users WHERE email LIKE 'USER_%'")
+          )
         )
-      )
+
+        return parseInt(result.rows[0].count)
+      })["|>"](provideClient("main"))
+
+      const count = await userCount["|>"](runPromiseExit)
 
       expect(count).toEqual(Ex.succeed(0))
 
-      const resultSuccess = await runPromiseExit(
-        T.gen(function* (_) {
-          const { transaction } = yield* _(Db("main"))
+      const resultSuccess = await T.gen(function* (_) {
+        const { transaction } = yield* _(Db("main"))
 
-          return yield* _(
-            pipe(
-              T.tuple(
-                createUser({ email: Email.wrap("USER_0@example.org") }),
-                createUser({ email: Email.wrap("USER_1@example.org") }),
-                createUser({ email: Email.wrap("USER_2@example.org") })
-              ),
-              transaction,
-              provideClient("main")
+        return yield* _(
+          transaction(
+            T.tuple(
+              createUser({ email: Email.wrap("USER_0@example.org") }),
+              createUser({ email: Email.wrap("USER_1@example.org") }),
+              createUser({ email: Email.wrap("USER_2@example.org") })
             )
           )
-        })
-      )
+        )
+      })
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
       assertSuccess(resultSuccess)
       expect(resultSuccess.value.map((_) => [_.email, _.id])).toEqual([
@@ -293,49 +276,33 @@ describe("Integration Suite", () => {
         ["USER_2@example.org", 7]
       ])
 
-      const countSuccess = await runPromiseExit(
-        pipe(
-          accessClientM("main")((client) =>
-            pipe(
-              T.fromPromiseDie(() =>
-                client.query("SELECT COUNT(*) FROM users WHERE email LIKE 'USER_%'")
-              ),
-              T.map((_) => parseInt(_.rows[0].count))
-            )
-          ),
-          provideClient("main")
-        )
-      )
+      const countSuccess = await userCount["|>"](runPromiseExit)
 
       assertSuccess(countSuccess)
       expect(countSuccess.value).toEqual(3)
     })
 
     it("get user", async () => {
-      const result = await runPromiseExit(
-        pipe(
-          getUser({ id: 5 }),
-          T.map((_) => _.email),
-          provideClient("main")
-        )
-      )
+      const result = await getUser({ id: 5 })
+        ["|>"](T.map((_) => _.email))
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
       expect(result).toEqual(Ex.succeed("USER_0@example.org"))
     })
 
     it("creates and updates user", async () => {
-      const result = await runPromiseExit(
-        pipe(
-          createUser({
-            email: Email.wrap("OldName@example.org")
-          }),
+      const result = await createUser({
+        email: Email.wrap("OldName@example.org")
+      })
+        ["|>"](
           T.chain((user) =>
             updateUser({ ...user, email: Email.wrap("NewEmail@example.org") })
-          ),
-          T.map((_) => _.email),
-          provideClient("main")
+          )
         )
-      )
+        ["|>"](T.map((_) => _.email))
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
       expect(result).toEqual(Ex.succeed("NewEmail@example.org"))
     })
@@ -343,49 +310,41 @@ describe("Integration Suite", () => {
 
   describe("Credential Api", () => {
     it("creates a credential", async () => {
-      const result = await runPromiseExit(
-        pipe(
-          createCredential({ userId: 5, password: "helloworld000" }),
-          provideClient("main")
-        )
-      )
+      const result = await createCredential({ userId: 5, password: "helloworld000" })
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
-      const id = pipe(Credential.lens, Lens.prop("id"))
-      const hash = pipe(Credential.lens, Lens.prop("hash"))
+      const id = Credential.lens["|>"](Lens.prop("id"))
+      const hash = Credential.lens["|>"](Lens.prop("hash"))
 
-      expect(pipe(result, Ex.map(id.get))).toEqual(Ex.succeed(1))
+      expect(result["|>"](Ex.map(id.get))).toEqual(Ex.succeed(1))
 
-      const verify = await runPromiseExit(
-        pipe(
-          T.done(result),
-          T.map(hash.get),
-          T.chain((_) => verifyPassword("helloworld000", _))
-        )
-      )
+      const verify = await T.done(result)
+        ["|>"](T.map(hash.get))
+        ["|>"](T.chain((_) => verifyPassword("helloworld000", _)))
+        ["|>"](runPromiseExit)
 
       expect(verify).toEqual(Ex.unit)
     })
 
     it("update a credential", async () => {
-      const result = await runPromiseExit(
-        pipe(
-          updateCredential({ id: 1, userId: 105, password: "helloworld001" }),
-          provideClient("main")
-        )
-      )
+      const result = await updateCredential({
+        id: 1,
+        userId: 105,
+        password: "helloworld001"
+      })
+        ["|>"](provideClient("main"))
+        ["|>"](runPromiseExit)
 
-      const id = pipe(Credential.lens, Lens.prop("id"))
-      const hash = pipe(Credential.lens, Lens.prop("hash"))
+      const id = Credential.lens["|>"](Lens.prop("id"))
+      const hash = Credential.lens["|>"](Lens.prop("hash"))
 
-      expect(pipe(result, Ex.map(id.get))).toEqual(Ex.succeed(1))
+      expect(result["|>"](Ex.map(id.get))).toEqual(Ex.succeed(1))
 
-      const verify = await runPromiseExit(
-        pipe(
-          T.done(result),
-          T.map(hash.get),
-          T.chain((_) => verifyPassword("helloworld001", _))
-        )
-      )
+      const verify = await T.done(result)
+        ["|>"](T.map(hash.get))
+        ["|>"](T.chain((_) => verifyPassword("helloworld001", _)))
+        ["|>"](runPromiseExit)
 
       expect(verify).toEqual(Ex.unit)
     })
@@ -410,7 +369,7 @@ describe("Integration Suite", () => {
               })["|>"](provideClient("main"))
             )
 
-            expect(pipe(verify)).toEqual(Ex.unit)
+            expect(verify).toEqual(Ex.unit)
           }
         ),
         { endOnFailure: true, timeout: 1000 }
