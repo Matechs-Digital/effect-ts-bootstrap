@@ -36,12 +36,12 @@ import {
   updateUser,
   UserPersistenceLive
 } from "../src/persistence/user"
-import { App } from "../src/program"
+import { Main } from "../src/program"
 import { assertSuccess } from "./utils/assertions"
 import { testRuntime } from "./utils/runtime"
 
 export function makeAppFiber() {
-  return App["|>"](T.fork)
+  return Main["|>"](T.fork)
     ["|>"](M.makeInterruptible(F.interrupt))
     ["|>"](M.map((fiber) => ({ fiber })))
 }

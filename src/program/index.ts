@@ -44,7 +44,7 @@ export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
   )
 )
 
-export const App = pipe(
+export const Main = pipe(
   HTTP.create,
   addHome,
   addRegistration,
@@ -79,5 +79,5 @@ const BootstrapMain = PersistenceMain["|>"](
 
 // main function (unsafe)
 export function main() {
-  return App["|>"](T.provideSomeLayer(BootstrapMain))["|>"](T.runMain)
+  return Main["|>"](T.provideSomeLayer(BootstrapMain))["|>"](T.runMain)
 }
