@@ -56,21 +56,21 @@ export interface AppFiber {
 
 export const AppFiber = has<AppFiber>()
 
-export const AppFiberLive = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
+export const AppFiberTest = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
 
-const Persistence_ = TransactionsLive["|>"](
+const PersistenceTest = TransactionsLive["|>"](
   L.using(L.allPar(UserPersistenceLive, CredentialPersistenceLive))
 )
 
-const Crypto_ = CryptoLive["|>"](L.using(PBKDF2ConfigTest))
+const CryptoTest = CryptoLive["|>"](L.using(PBKDF2ConfigTest))
 
-const Db_ = DbLive("main")
+const DbTest = DbLive("main")
   ["|>"](L.using(TestMigration("main")))
   ["|>"](L.using(PgPoolLive("main")))
   ["|>"](L.using(PgConfigTest("main")("integration")))
   ["|>"](L.using(TestContainersLive("integration")))
 
-const Server_ = LiveHTTP["|>"](
+const ServerTest = LiveHTTP["|>"](
   L.using(
     serverConfig({
       host: "0.0.0.0",
@@ -79,14 +79,14 @@ const Server_ = LiveHTTP["|>"](
   )
 )
 
-const Bootstrap_ = Persistence_["|>"](L.using(Crypto_))["|>"](
-  L.using(L.allPar(Db_, Server_))
+const BootstrapTest = PersistenceTest["|>"](
+  L.using(L.allPar(DbTest, ServerTest, CryptoTest))
 )
 
 describe("Integration Suite", () => {
   const { runPromiseExit } = pipe(
-    AppFiberLive,
-    L.using(Bootstrap_),
+    AppFiberTest,
+    L.using(BootstrapTest),
     testRuntime
   )({
     open: 30_000,

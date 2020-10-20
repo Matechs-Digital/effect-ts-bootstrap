@@ -52,19 +52,19 @@ export const App = pipe(
   HTTP.drain
 )
 
-const Persistence = TransactionsLive["|>"](
+const PersistenceMain = TransactionsLive["|>"](
   L.using(L.allPar(UserPersistenceLive, CredentialPersistenceLive))
 )
 
-const Crypto = CryptoLive["|>"](L.using(PBKDF2ConfigLive))
+const CryptoMain = CryptoLive["|>"](L.using(PBKDF2ConfigLive))
 
-const Db = DbLive("main")
+const DbMain = DbLive("main")
   ["|>"](L.using(TestMigration("main")))
   ["|>"](L.using(PgPoolLive("main")))
   ["|>"](L.using(PgConfigTest("main")("dev")))
   ["|>"](L.using(TestContainersLive("dev")))
 
-const Server = HTTP.LiveHTTP["|>"](
+const ServerMain = HTTP.LiveHTTP["|>"](
   L.using(
     HTTP.serverConfig({
       host: "0.0.0.0",
@@ -73,11 +73,11 @@ const Server = HTTP.LiveHTTP["|>"](
   )
 )
 
-const Bootstrap = Persistence["|>"](L.using(Crypto))["|>"](
-  L.using(L.allPar(Db, Server))
+const BootstrapMain = PersistenceMain["|>"](
+  L.using(L.allPar(DbMain, ServerMain, CryptoMain))
 )
 
 // main function (unsafe)
 export function main() {
-  return App["|>"](T.provideSomeLayer(Bootstrap))["|>"](T.runMain)
+  return App["|>"](T.provideSomeLayer(BootstrapMain))["|>"](T.runMain)
 }
