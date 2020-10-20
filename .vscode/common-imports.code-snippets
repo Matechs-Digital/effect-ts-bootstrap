@@ -103,5 +103,10 @@
     "prefix": "+F",
     "body": ["import * as F from \"@effect-ts/core/Effect/Fiber\""],
     "description": "Fiber as F"
+  },
+  "Iso": {
+    "prefix": "+I",
+    "body": ["import * as I from \"@effect-ts/monocle/Iso\""],
+    "description": "Iso as I"
   }
 }
