@@ -79,8 +79,8 @@ const ServerTest = LiveHTTP["|>"](
   )
 )
 
-const BootstrapTest = AppFiberTest["|>"](
-  L.using(PersistenceTest["|>"](L.using(L.allPar(DbTest, ServerTest, CryptoTest))))
+const BootstrapTest = AppFiberTest["|>"](L.using(PersistenceTest))["|>"](
+  L.using(L.allPar(DbTest, ServerTest, CryptoTest))
 )
 
 describe("Integration Suite", () => {
