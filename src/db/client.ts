@@ -31,7 +31,7 @@ export function accessClientM<K extends Databases>(db: K) {
   return T.deriveAccessM(PgClient(db))(["client"]).client
 }
 
-export function provideClient<K extends Databases>(db: K) {
+export function withPoolClient<K extends Databases>(db: K) {
   return <R, E, A>(
     self: Effect<R & Has<PgClient<K>>, E, A>
   ): Effect<R & Has<Clock> & Has<PgPool<K>>, E, A> =>

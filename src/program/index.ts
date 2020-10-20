@@ -10,7 +10,7 @@ import type { Erase } from "@effect-ts/core/Utils"
 
 import { addAuthMiddleware, addRegistration, authenticatedUser } from "../api"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
-import { DbLive, PgClient, PgPoolLive, provideClient, TestMigration } from "../db"
+import { DbLive, PgClient, PgPoolLive, TestMigration, withPoolClient } from "../db"
 import { TestContainersLive } from "../dev/containers"
 import { PgConfigTest } from "../dev/db"
 import * as HTTP from "../http"
@@ -34,7 +34,7 @@ export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
 
       return result.rows
     }),
-    provideClient("main"),
+    withPoolClient("main"),
     T.result,
     T.chain((ex) =>
       T.effectTotal(() => {

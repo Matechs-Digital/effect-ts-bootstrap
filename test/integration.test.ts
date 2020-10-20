@@ -14,8 +14,8 @@ import {
   DbLive,
   PgClient,
   PgPoolLive,
-  provideClient,
-  TestMigration
+  TestMigration,
+  withPoolClient
 } from "../src/db"
 import { TestContainersLive } from "../src/dev/containers"
 import { PgConfigTest } from "../src/dev/db"
@@ -96,7 +96,7 @@ describe("Integration Suite", () => {
 
         return result.rows[0].name
       })
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       expect(result).toEqual(Ex.succeed("Michael"))
@@ -125,7 +125,7 @@ describe("Integration Suite", () => {
 
         return rows
       })
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       expect(result).toEqual(
@@ -165,7 +165,7 @@ describe("Integration Suite", () => {
 
         return rows
       })
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       expect(result).toEqual(
@@ -203,7 +203,7 @@ describe("Integration Suite", () => {
   describe("User Api", () => {
     it("creates a new user", async () => {
       const result = await createUser({ email: Email.wrap("ma@example.org") })
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       const nameAndId = User.lens["|>"](Lens.props("email", "id"))
@@ -215,7 +215,7 @@ describe("Integration Suite", () => {
 
     it("fail to create a new user with an empty email", async () => {
       const result = await createUser({ email: Email.wrap("") })
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       expect(result).toEqual(
@@ -239,7 +239,7 @@ describe("Integration Suite", () => {
             ["|>"](transaction)
         )
       })
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       expect(result).toEqual(Ex.fail("error"))
@@ -254,7 +254,7 @@ describe("Integration Suite", () => {
         )
 
         return parseInt(result.rows[0].count)
-      })["|>"](provideClient("main"))
+      })["|>"](withPoolClient("main"))
 
       const count = await userCount["|>"](runPromiseExit)
 
@@ -273,7 +273,7 @@ describe("Integration Suite", () => {
           )
         )
       })
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       assertSuccess(resultSuccess)
@@ -292,7 +292,7 @@ describe("Integration Suite", () => {
     it("get user", async () => {
       const result = await getUser({ id: 5 })
         ["|>"](T.map((_) => _.email))
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       expect(result).toEqual(Ex.succeed("USER_0@example.org"))
@@ -308,7 +308,7 @@ describe("Integration Suite", () => {
           )
         )
         ["|>"](T.map((_) => _.email))
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       expect(result).toEqual(Ex.succeed("NewEmail@example.org"))
@@ -318,7 +318,7 @@ describe("Integration Suite", () => {
   describe("Credential Api", () => {
     it("creates a credential", async () => {
       const result = await createCredential({ userId: 5, password: "helloworld000" })
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       const id = Credential.lens["|>"](Lens.prop("id"))
@@ -340,7 +340,7 @@ describe("Integration Suite", () => {
         userId: 105,
         password: "helloworld001"
       })
-        ["|>"](provideClient("main"))
+        ["|>"](withPoolClient("main"))
         ["|>"](runPromiseExit)
 
       const id = Credential.lens["|>"](Lens.prop("id"))
@@ -373,7 +373,7 @@ describe("Integration Suite", () => {
                 const cred = yield* _(getCredentialByUserId(user.id))
 
                 yield* _(verifyPassword(password, cred.hash))
-              })["|>"](provideClient("main"))
+              })["|>"](withPoolClient("main"))
             )
 
             expect(verify).toEqual(Ex.unit)
