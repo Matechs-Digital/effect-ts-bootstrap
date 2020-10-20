@@ -79,16 +79,12 @@ const ServerTest = LiveHTTP["|>"](
   )
 )
 
-const BootstrapTest = PersistenceTest["|>"](
-  L.using(L.allPar(DbTest, ServerTest, CryptoTest))
+const BootstrapTest = AppFiberTest["|>"](
+  L.using(PersistenceTest["|>"](L.using(L.allPar(DbTest, ServerTest, CryptoTest))))
 )
 
 describe("Integration Suite", () => {
-  const { runPromiseExit } = pipe(
-    AppFiberTest,
-    L.using(BootstrapTest),
-    testRuntime
-  )({
+  const { runPromiseExit } = testRuntime(BootstrapTest)({
     open: 30_000,
     close: 30_000
   })
