@@ -3,6 +3,7 @@ import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as F from "@effect-ts/core/Effect/Fiber"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
+import type { _A } from "@effect-ts/core/Utils"
 import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import { has } from "@effect-ts/system/Has"
@@ -40,9 +41,7 @@ export function makeAppFiber() {
     ["|>"](M.map((fiber) => ({ fiber })))
 }
 
-export interface AppFiber {
-  fiber: F.FiberContext<never, never>
-}
+export interface AppFiber extends _A<ReturnType<typeof makeAppFiber>> {}
 
 export const AppFiber = has<AppFiber>()
 
