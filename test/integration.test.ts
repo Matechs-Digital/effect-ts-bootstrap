@@ -36,7 +36,7 @@ import {
   updateUser,
   UserPersistenceLive
 } from "../src/persistence/user"
-import { Main } from "../src/program"
+import { Main, PersistenceMain, ServerMain } from "../src/program"
 import { assertSuccess } from "./utils/assertions"
 import { testRuntime } from "./utils/runtime"
 
@@ -54,10 +54,6 @@ export const AppFiber = has<AppFiber>()
 
 export const AppFiberTest = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
 
-const PersistenceTest = TransactionsLive["<+<"](
-  UserPersistenceLive["+++"](CredentialPersistenceLive)
-)
-
 const CryptoTest = CryptoLive["<+<"](PBKDF2ConfigTest)
 
 const DbTest = DbLive("main")
@@ -66,15 +62,8 @@ const DbTest = DbLive("main")
   ["<+<"](PgConfigTest("main")("integration"))
   ["<+<"](TestContainersLive("integration"))
 
-const ServerTest = LiveHTTP["<+<"](
-  serverConfig({
-    host: "0.0.0.0",
-    port: 8082
-  })
-)
-
-const BootstrapTest = AppFiberTest["<+<"](PersistenceTest)["<+<"](
-  DbTest["+++"](ServerTest)["+++"](CryptoTest)
+const BootstrapTest = AppFiberTest["<+<"](PersistenceMain)["<+<"](
+  DbTest["+++"](ServerMain)["+++"](CryptoTest)
 )
 
 describe("Integration Suite", () => {
