@@ -66,13 +66,11 @@ const DbTest = DbLive("main")
   ["<+<"](PgConfigTest("main")("integration"))
   ["<+<"](TestContainersLive("integration"))
 
-const ServerTest = LiveHTTP["|>"](
-  L.using(
-    serverConfig({
-      host: "0.0.0.0",
-      port: 8082
-    })
-  )
+const ServerTest = LiveHTTP["<+<"](
+  serverConfig({
+    host: "0.0.0.0",
+    port: 8082
+  })
 )
 
 const BootstrapTest = AppFiberTest["<+<"](PersistenceTest)["<+<"](
