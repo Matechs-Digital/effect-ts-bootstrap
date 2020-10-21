@@ -14,29 +14,29 @@ import { TransactionsLive } from "../persistence/transactions"
 import { UserPersistenceLive } from "../persistence/user"
 
 export const addHome = HTTP.addRoute((r) => r.req.url === "/")(({ res }) =>
-  pipe(
-    T.gen(function* (_) {
-      const { client } = yield* _(PgClient("main"))
+  T.gen(function* (_) {
+    const { client } = yield* _(PgClient("main"))
 
-      const result = yield* _(
-        T.fromPromiseDie(() =>
-          client.query(
-            "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
-            ["users"]
-          )
+    const result = yield* _(
+      T.fromPromiseDie(() =>
+        client.query(
+          "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1::text;",
+          ["users"]
         )
       )
-
-      return result.rows
-    }),
-    withPoolClient("main"),
-    T.result,
-    T.chain((ex) =>
-      T.effectTotal(() => {
-        res.end(JSON.stringify(ex))
-      })
     )
-  )
+
+    return result.rows
+  })
+    ["|>"](withPoolClient("main"))
+    ["|>"](T.result)
+    ["|>"](
+      T.chain((ex) =>
+        T.effectTotal(() => {
+          res.end(JSON.stringify(ex))
+        })
+      )
+    )
 )
 
 export const Main = pipe(
