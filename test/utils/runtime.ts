@@ -28,20 +28,22 @@ export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>) {
     const promiseEnv = Pr.unsafeMake<never, R>(None)
     const promiseRelMap = Pr.unsafeMake<never, M.ReleaseMap>(None)
 
-    beforeAll(async () => {
-      await pipe(
-        T.do,
-        T.bind("rm", () => M.makeReleaseMap),
-        T.tap(({ rm }) => promiseRelMap["|>"](Pr.succeed(rm))),
-        T.bind("res", ({ rm }) =>
-          T.provideSome_(L.build(self).effect, (r: T.DefaultEnv) => tuple(r, rm))
+    beforeAll(
+      async () =>
+        pipe(
+          T.do,
+          T.bind("rm", () => M.makeReleaseMap),
+          T.tap(({ rm }) => promiseRelMap["|>"](Pr.succeed(rm))),
+          T.bind("res", ({ rm }) =>
+            T.provideSome_(L.build(self).effect, (r: T.DefaultEnv) => tuple(r, rm))
+          ),
+          T.map(({ res }) => res[1]),
+          T.result,
+          T.chain((ex) => promiseEnv["|>"](Pr.complete(T.done(ex)))),
+          T.runPromise
         ),
-        T.map(({ res }) => res[1]),
-        T.result,
-        T.chain((ex) => promiseEnv["|>"](Pr.complete(T.done(ex)))),
-        T.runPromise
-      )
-    }, open)
+      open
+    )
 
     afterAll(async () => {
       const res = await promiseRelMap["|>"](Pr.await)
@@ -55,25 +57,15 @@ export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>) {
 
     return {
       runPromise: (self) =>
-        pipe(
-          promiseEnv,
-          Pr.await,
-          T.chain((r) => self["|>"](T.provide(r))),
-          T.runPromise
-        ),
+        promiseEnv["|>"](Pr.await)
+          ["|>"](T.chain((r) => self["|>"](T.provide(r))))
+          ["|>"](T.runPromise),
       runPromiseExit: (self) =>
-        pipe(
-          promiseEnv,
-          Pr.await,
-          T.chain((r) => self["|>"](T.provide(r))),
-          T.runPromiseExit
-        ),
+        promiseEnv["|>"](Pr.await)
+          ["|>"](T.chain((r) => self["|>"](T.provide(r))))
+          ["|>"](T.runPromiseExit),
       provide: (self) =>
-        pipe(
-          promiseEnv,
-          Pr.await,
-          T.chain((r) => self["|>"](T.provide(r)))
-        )
+        promiseEnv["|>"](Pr.await)["|>"](T.chain((r) => self["|>"](T.provide(r))))
     }
   }
 }
