@@ -1,10 +1,14 @@
+import "@effect-ts/core/Operators"
+
 import * as T from "@effect-ts/core/Effect"
 import * as C from "@effect-ts/core/Effect/Cause"
+import { pretty } from "@effect-ts/core/Effect/Cause"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
+import * as Pr from "@effect-ts/core/Effect/Promise"
 import { pipe, tuple } from "@effect-ts/core/Function"
-import { AtomicReference } from "@effect-ts/system/Support/AtomicReference"
+import { None } from "@effect-ts/system/Fiber"
 
 export interface TestRuntime<R> {
   runPromise: <E, A>(self: T.Effect<R & T.DefaultEnv, E, A>) => Promise<A>
@@ -22,66 +26,54 @@ export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>) {
     open?: number
     close?: number
   } = {}): TestRuntime<R> => {
-    const env = new AtomicReference<R | undefined>(undefined)
-    const relMap = new AtomicReference<M.ReleaseMap | undefined>(undefined)
+    const promiseEnv = Pr.unsafeMake<never, R>(None)
+    const promiseRelMap = Pr.unsafeMake<never, M.ReleaseMap>(None)
 
     beforeAll(async () => {
-      const res = await pipe(
+      await pipe(
         T.do,
         T.bind("rm", () => M.makeReleaseMap),
+        T.tap(({ rm }) => promiseRelMap["|>"](Pr.succeed(rm))),
         T.bind("res", ({ rm }) =>
           T.provideSome_(L.build(self).effect, (r: T.DefaultEnv) => tuple(r, rm))
         ),
-        T.tap(({ res, rm }) =>
-          T.effectTotal(() => {
-            env.set(res[1])
-            relMap.set(rm)
-          })
-        ),
-        T.runPromiseExit
+        T.map(({ res }) => res[1]),
+        T.result,
+        T.chain((ex) => promiseEnv["|>"](Pr.complete(T.done(ex)))),
+        T.runPromise
       )
-
-      if (res._tag === "Failure") {
-        console.log(C.pretty(res.cause))
-
-        throw new C.FiberFailure(res.cause)
-      }
     }, open)
 
     afterAll(async () => {
-      const rm = relMap.get
-      if (rm) {
-        const res = await T.runPromiseExit(
-          M.releaseAll(Ex.succeed(undefined), T.sequential)(rm)
-        )
-        if (res._tag === "Failure") {
-          console.log(C.pretty(res.cause))
+      const res = await promiseRelMap["|>"](Pr.await)
+        ["|>"](T.chain((rm) => M.releaseAll(Ex.succeed(undefined), T.sequential)(rm)))
+        ["|>"](T.runPromiseExit)
 
-          throw new C.FiberFailure(res.cause)
-        }
+      if (res._tag === "Failure") {
+        throw new Error(pretty(res.cause))
       }
     }, close)
 
     return {
       runPromise: (self) =>
-        T.runPromise(
-          T.suspend(() =>
-            pipe(env.get, (e) =>
-              e != null ? T.provide_(self, e) : T.die("environment not ready")
-            )
-          )
+        pipe(
+          promiseEnv,
+          Pr.await,
+          T.chain((r) => self["|>"](T.provide(r))),
+          T.runPromise
         ),
       runPromiseExit: (self) =>
-        T.runPromiseExit(
-          T.suspend(() =>
-            pipe(env.get, (e) =>
-              e != null ? T.provide_(self, e) : T.die("environment not ready")
-            )
-          )
+        pipe(
+          promiseEnv,
+          Pr.await,
+          T.chain((r) => self["|>"](T.provide(r))),
+          T.runPromiseExit
         ),
       provide: (self) =>
-        pipe(env.get, (e) =>
-          e != null ? T.provide_(self, e) : T.die("environment not ready")
+        pipe(
+          promiseEnv,
+          Pr.await,
+          T.chain((r) => self["|>"](T.provide(r)))
         )
     }
   }
