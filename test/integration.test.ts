@@ -19,23 +19,17 @@ import {
 } from "../src/db"
 import { TestContainersLive } from "../src/dev/containers"
 import { PgConfigTest } from "../src/dev/db"
-import { isRouterDraining, LiveHTTP, serverConfig } from "../src/http"
+import { isRouterDraining } from "../src/http"
 import { Credential, PasswordField } from "../src/model/credential"
 import { Email, EmailField, User } from "../src/model/user"
 import { ValidationError } from "../src/model/validation"
 import {
   createCredential,
   CredentialPersistence,
-  CredentialPersistenceLive,
   updateCredential
 } from "../src/persistence/credential"
-import { register, TransactionsLive } from "../src/persistence/transactions"
-import {
-  createUser,
-  getUser,
-  updateUser,
-  UserPersistenceLive
-} from "../src/persistence/user"
+import { register } from "../src/persistence/transactions"
+import { createUser, getUser, updateUser } from "../src/persistence/user"
 import { Main, PersistenceMain, ServerMain } from "../src/program"
 import { assertSuccess } from "./utils/assertions"
 import { testRuntime } from "./utils/runtime"
