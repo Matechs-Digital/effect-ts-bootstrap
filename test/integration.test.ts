@@ -54,17 +54,17 @@ export const AppFiber = has<AppFiber>()
 
 export const AppFiberTest = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
 
-const PersistenceTest = TransactionsLive["|>"](
-  L.using(L.all(UserPersistenceLive, CredentialPersistenceLive))
+const PersistenceTest = TransactionsLive["<+<"](
+  UserPersistenceLive["+++"](CredentialPersistenceLive)
 )
 
-const CryptoTest = CryptoLive["|>"](L.using(PBKDF2ConfigTest))
+const CryptoTest = CryptoLive["<+<"](PBKDF2ConfigTest)
 
 const DbTest = DbLive("main")
-  ["|>"](L.using(TestMigration("main")))
-  ["|>"](L.using(PgPoolLive("main")))
-  ["|>"](L.using(PgConfigTest("main")("integration")))
-  ["|>"](L.using(TestContainersLive("integration")))
+  ["<+<"](TestMigration("main"))
+  ["<+<"](PgPoolLive("main"))
+  ["<+<"](PgConfigTest("main")("integration"))
+  ["<+<"](TestContainersLive("integration"))
 
 const ServerTest = LiveHTTP["|>"](
   L.using(
@@ -75,8 +75,8 @@ const ServerTest = LiveHTTP["|>"](
   )
 )
 
-const BootstrapTest = AppFiberTest["|>"](L.using(PersistenceTest))["|>"](
-  L.using(L.all(DbTest, ServerTest, CryptoTest))
+const BootstrapTest = AppFiberTest["<+<"](PersistenceTest)["<+<"](
+  DbTest["+++"](ServerTest)["+++"](CryptoTest)
 )
 
 describe("Integration Suite", () => {
