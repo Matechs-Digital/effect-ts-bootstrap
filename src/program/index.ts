@@ -1,14 +1,9 @@
 import "@effect-ts/core/Operators"
 
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
-import * as F from "@effect-ts/core/Effect/Fiber"
-import * as L from "@effect-ts/core/Effect/Layer"
-import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe } from "@effect-ts/core/Function"
-import type { Erase } from "@effect-ts/core/Utils"
 
-import { addAuthMiddleware, addRegistration, authenticatedUser } from "../api"
+import { addAuthMiddleware, addRegistration } from "../api"
 import { CryptoLive, PBKDF2ConfigLive } from "../crypto"
 import { DbLive, PgClient, PgPoolLive, TestMigration, withPoolClient } from "../db"
 import { TestContainersLive } from "../dev/containers"
