@@ -1,7 +1,6 @@
 import "@effect-ts/core/Operators"
 
 import * as T from "@effect-ts/core/Effect"
-import * as C from "@effect-ts/core/Effect/Cause"
 import { pretty } from "@effect-ts/core/Effect/Cause"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as L from "@effect-ts/core/Effect/Layer"
