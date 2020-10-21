@@ -1,7 +1,7 @@
 import * as T from "@effect-ts/core/Effect"
 import * as C from "@effect-ts/core/Effect/Cause"
 import * as Ex from "@effect-ts/core/Effect/Exit"
-import type * as L from "@effect-ts/core/Effect/Layer"
+import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import { pipe, tuple } from "@effect-ts/core/Function"
 import { AtomicReference } from "@effect-ts/system/Support/AtomicReference"
@@ -30,7 +30,7 @@ export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>) {
         T.do,
         T.bind("rm", () => M.makeReleaseMap),
         T.bind("res", ({ rm }) =>
-          T.provideSome_(self.build.effect, (r: T.DefaultEnv) => tuple(r, rm))
+          T.provideSome_(L.build(self).effect, (r: T.DefaultEnv) => tuple(r, rm))
         ),
         T.tap(({ res, rm }) =>
           T.effectTotal(() => {

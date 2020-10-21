@@ -53,7 +53,7 @@ export const Main = pipe(
 )
 
 const PersistenceMain = TransactionsLive["|>"](
-  L.using(L.allPar(UserPersistenceLive, CredentialPersistenceLive))
+  L.using(L.all(UserPersistenceLive, CredentialPersistenceLive))
 )
 
 const CryptoMain = CryptoLive["|>"](L.using(PBKDF2ConfigLive))
@@ -74,7 +74,7 @@ const ServerMain = HTTP.LiveHTTP["|>"](
 )
 
 const BootstrapMain = PersistenceMain["|>"](
-  L.using(L.allPar(DbMain, ServerMain, CryptoMain))
+  L.using(L.all(DbMain, ServerMain, CryptoMain))
 )
 
 // main function (unsafe)

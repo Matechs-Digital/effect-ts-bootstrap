@@ -55,7 +55,7 @@ export const AppFiber = has<AppFiber>()
 export const AppFiberTest = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
 
 const PersistenceTest = TransactionsLive["|>"](
-  L.using(L.allPar(UserPersistenceLive, CredentialPersistenceLive))
+  L.using(L.all(UserPersistenceLive, CredentialPersistenceLive))
 )
 
 const CryptoTest = CryptoLive["|>"](L.using(PBKDF2ConfigTest))
@@ -76,7 +76,7 @@ const ServerTest = LiveHTTP["|>"](
 )
 
 const BootstrapTest = AppFiberTest["|>"](L.using(PersistenceTest))["|>"](
-  L.using(L.allPar(DbTest, ServerTest, CryptoTest))
+  L.using(L.all(DbTest, ServerTest, CryptoTest))
 )
 
 describe("Integration Suite", () => {
