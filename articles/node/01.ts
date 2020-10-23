@@ -85,6 +85,8 @@ const splitString: Transducer<unknown, never, string, string> = transducer(
 
 readFileStream(path.join(__dirname, "../../tsconfig.json"))
   ["|>"](S.aggregate(splitString))
+  ["|>"](S.filter((_) => _.includes("strict")))
+  ["|>"](S.map((_) => _.trim()))
   ["|>"](S.runCollect)
   ["|>"](
     T.chain((a) =>
