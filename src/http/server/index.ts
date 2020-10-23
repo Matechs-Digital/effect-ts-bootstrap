@@ -1,11 +1,11 @@
-import type { Has } from "@effect-ts/core/Classic/Has"
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import * as Q from "@effect-ts/core/Effect/Queue"
 import { pipe } from "@effect-ts/core/Function"
+import type { Has } from "@effect-ts/core/Has"
+import { tag } from "@effect-ts/core/Has"
 import { intersect } from "@effect-ts/core/Utils"
 import * as http from "http"
 
@@ -16,7 +16,7 @@ export interface HTTPServerConfig {
   }
 }
 
-export const HTTPServerConfig = has<HTTPServerConfig>()
+export const HTTPServerConfig = tag<HTTPServerConfig>()
 
 export const { config: accessServerConfigM } = T.deriveAccessM(HTTPServerConfig)([
   "config"
@@ -33,7 +33,7 @@ export interface Request {
   res: http.ServerResponse
 }
 
-export const Request = has<Request>()
+export const Request = tag<Request>()
 
 export const { req: accessReqM, res: accessResM } = T.deriveAccessM(Request)([
   "req",
@@ -48,8 +48,8 @@ export interface RequestQueue {
   queue: Q.Queue<Request>
 }
 
-export const Server = has<Server>()
-export const RequestQueue = has<RequestQueue>()
+export const Server = tag<Server>()
+export const RequestQueue = tag<RequestQueue>()
 
 export const { queue: accessQueueM } = T.deriveAccessM(RequestQueue)(["queue"])
 export const { server: accessServerM } = T.deriveAccessM(Server)(["server"])

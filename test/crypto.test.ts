@@ -15,8 +15,7 @@ import { testRuntime } from "./utils/runtime"
 describe("Crypto Suite", () => {
   describe("Live", () => {
     const { runPromise, runPromiseExit } = pipe(
-      CryptoLive,
-      L.using(PBKDF2ConfigLive),
+      CryptoLive["<<<"](PBKDF2ConfigLive),
       testRuntime
     )()
 

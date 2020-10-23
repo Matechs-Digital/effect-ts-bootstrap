@@ -1,4 +1,3 @@
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import type * as C from "@effect-ts/core/Effect/Clock"
 import * as L from "@effect-ts/core/Effect/Layer"
@@ -6,6 +5,7 @@ import type { Managed } from "@effect-ts/core/Effect/Managed"
 import * as M from "@effect-ts/core/Effect/Managed"
 import * as S from "@effect-ts/core/Effect/Schedule"
 import { identity, pipe } from "@effect-ts/core/Function"
+import { tag } from "@effect-ts/core/Has"
 import * as PG from "pg"
 
 import { deriveTenants } from "../tenants"
@@ -23,7 +23,7 @@ export interface PgPool<K extends Databases> {
   managedClient: Managed<C.HasClock, never, PG.PoolClient>
 }
 
-export const PgPool = <K extends Databases>(_: K) => has<PgPool<K>>().setKey(pools[_])
+export const PgPool = <K extends Databases>(_: K) => tag<PgPool<K>>().setKey(pools[_])
 
 export function withPoolClientM<K extends Databases>(_: K) {
   return <R, E, A>(body: (_: PG.PoolClient) => T.Effect<R, E, A>) =>

@@ -1,8 +1,8 @@
 import "@effect-ts/core/Operators"
 
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
+import { tag } from "@effect-ts/core/Has"
 import type { _A } from "@effect-ts/core/Utils"
 
 import { Crypto } from "../crypto"
@@ -85,7 +85,7 @@ export const makeCredentialPersistence = T.gen(function* (_) {
 
 export interface CredentialPersistence extends _A<typeof makeCredentialPersistence> {}
 
-export const CredentialPersistence = has<CredentialPersistence>()
+export const CredentialPersistence = tag<CredentialPersistence>()
 
 export const CredentialPersistenceLive = L.fromEffect(CredentialPersistence)(
   makeCredentialPersistence

@@ -6,7 +6,7 @@ import * as M from "@effect-ts/core/Effect/Managed"
 import type { _A } from "@effect-ts/core/Utils"
 import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
-import { has } from "@effect-ts/system/Has"
+import { tag } from "@effect-ts/system/Has"
 import * as fc from "fast-check"
 
 import { Crypto, CryptoLive, PBKDF2ConfigTest, verifyPassword } from "../src/crypto"
@@ -43,17 +43,17 @@ export function makeAppFiber() {
 
 export interface AppFiber extends _A<ReturnType<typeof makeAppFiber>> {}
 
-export const AppFiber = has<AppFiber>()
+export const AppFiber = tag<AppFiber>()
 
 export const AppFiberTest = L.fromConstructorManaged(AppFiber)(makeAppFiber)()
 
-const CryptoTest = CryptoLive["<+<"](PBKDF2ConfigTest)
+const CryptoTest = CryptoLive["<<<"](PBKDF2ConfigTest)
 
 const DbTest = DbLive("main")
-  ["<+<"](TestMigration("main"))
+  ["<<<"](TestMigration("main"))
   ["<+<"](PgPoolLive("main"))
-  ["<+<"](PgConfigTest("main")("integration"))
-  ["<+<"](TestContainersLive("integration"))
+  ["<<<"](PgConfigTest("main")("integration"))
+  ["<<<"](TestContainersLive("integration"))
 
 const BootstrapTest = AppFiberTest["<+<"](PersistenceMain)["<+<"](
   DbTest["+++"](ServerMain)["+++"](CryptoTest)

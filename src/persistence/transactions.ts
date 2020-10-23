@@ -1,8 +1,8 @@
 import "@effect-ts/core/Operators"
 
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
+import { tag } from "@effect-ts/core/Has"
 
 import { Db } from "../db"
 import type { Register } from "../model/api"
@@ -22,7 +22,7 @@ export const makeTransactions = (
 
 export interface Transactions extends ReturnType<typeof makeTransactions> {}
 
-export const Transactions = has<Transactions>()
+export const Transactions = tag<Transactions>()
 
 export const TransactionsLive = L.fromConstructor(Transactions)(makeTransactions)(
   CredentialPersistence,

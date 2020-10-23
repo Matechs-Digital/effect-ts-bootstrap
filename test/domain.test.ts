@@ -1,5 +1,5 @@
 import { left, right } from "@effect-ts/core/Classic/Either"
-import * as T from "@effect-ts/core/Classic/Sync"
+import * as T from "@effect-ts/core/Sync"
 import { DecodeError } from "@effect-ts/morphic/Decoder/common"
 
 import { decodeId } from "../src/model/common"

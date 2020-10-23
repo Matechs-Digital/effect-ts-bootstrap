@@ -1,8 +1,8 @@
-import type { Has } from "@effect-ts/core/Classic/Has"
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import type { Clock } from "@effect-ts/core/Effect/Clock"
 import * as L from "@effect-ts/core/Effect/Layer"
+import type { Has } from "@effect-ts/core/Has"
+import { tag } from "@effect-ts/core/Has"
 import type { QueryResult, QueryResultRow } from "pg"
 
 import { deriveTenants } from "../tenants"
@@ -62,7 +62,7 @@ export interface Db<K extends Databases> {
   ) => T.Effect<R & Has<Clock> & Has<PgPool<K>>, E, A>
 }
 
-export const Db = <K extends Databases>(db: K) => has<Db<K>>().setKey(apis[db])
+export const Db = <K extends Databases>(db: K) => tag<Db<K>>().setKey(apis[db])
 
 export const DbLive = <K extends Databases>(db: K) =>
   L.fromEffect(Db(db))(makeLiveDb(db))

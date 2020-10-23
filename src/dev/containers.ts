@@ -1,6 +1,6 @@
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
+import { tag } from "@effect-ts/core/Has"
 import { Duration, TemporalUnit } from "node-duration"
 import * as path from "path"
 import type { StartedDockerComposeEnvironment } from "testcontainers"
@@ -19,7 +19,7 @@ export interface TestContainers<K extends Environments> {
 }
 
 export const TestContainers = <K extends Environments>(_name: K) =>
-  has<TestContainers<K>>().setKey(ref[_name])
+  tag<TestContainers<K>>().setKey(ref[_name])
 
 export const TestContainersLive = <K extends Environments>(_name: K) =>
   L.create(TestContainers(_name))

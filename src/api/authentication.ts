@@ -1,9 +1,9 @@
-import type { Has } from "@effect-ts/core/Classic/Has"
-import { has } from "@effect-ts/core/Classic/Has"
 import type { Option } from "@effect-ts/core/Classic/Option"
 import * as O from "@effect-ts/core/Classic/Option"
 import * as T from "@effect-ts/core/Effect"
 import { pipe } from "@effect-ts/core/Function"
+import type { Has } from "@effect-ts/core/Has"
+import { tag } from "@effect-ts/core/Has"
 
 import * as HTTP from "../http"
 
@@ -11,7 +11,7 @@ export interface AuthSession {
   maybeUser: Option<string>
 }
 
-export const AuthSession = has<AuthSession>()
+export const AuthSession = tag<AuthSession>()
 
 export const { maybeUser: accessMaybeUserM } = T.deriveAccessM(AuthSession)([
   "maybeUser"

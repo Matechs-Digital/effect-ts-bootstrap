@@ -1,6 +1,6 @@
 import * as O from "@effect-ts/core/Classic/Option"
-import * as S from "@effect-ts/core/Classic/Sync"
 import { flow } from "@effect-ts/core/Function"
+import * as S from "@effect-ts/core/Sync"
 import type { AType, EType } from "@effect-ts/morphic"
 import { DecoderURI, FastCheckURI, make, opaque } from "@effect-ts/morphic"
 import type { DecodingError } from "@effect-ts/morphic/Decoder/common"

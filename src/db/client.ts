@@ -1,11 +1,10 @@
-import type { Has } from "@effect-ts/core/Classic/Has"
-import { has } from "@effect-ts/core/Classic/Has"
 import type { Effect } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import type { Clock } from "@effect-ts/core/Effect/Clock"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
-import { identity } from "@effect-ts/core/Function"
+import type { Has } from "@effect-ts/core/Has"
+import { tag } from "@effect-ts/core/Has"
 import type * as PG from "pg"
 
 import { deriveTenants } from "../tenants"
@@ -21,7 +20,7 @@ export interface PgClient<K> {
 }
 
 export const PgClient = <K extends Databases>(db: K) =>
-  has<PgClient<K>>().setKey(clients[db])
+  tag<PgClient<K>>().setKey(clients[db])
 
 export function accessClient<K extends Databases>(db: K) {
   return T.deriveAccess(PgClient(db))(["client"]).client

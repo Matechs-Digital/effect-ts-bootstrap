@@ -1,9 +1,9 @@
 import "@effect-ts/core/Operators"
 
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import { flow } from "@effect-ts/core/Function"
+import { tag } from "@effect-ts/core/Has"
 import type { _A } from "@effect-ts/core/Utils"
 
 import { Db } from "../db"
@@ -60,7 +60,7 @@ export const makeUserPersistence = T.gen(function* (_) {
 
 export interface UserPersistence extends _A<typeof makeUserPersistence> {}
 
-export const UserPersistence = has<UserPersistence>()
+export const UserPersistence = tag<UserPersistence>()
 
 export const UserPersistenceLive = L.fromEffect(UserPersistence)(makeUserPersistence)
 

@@ -47,28 +47,28 @@ export const Main = pipe(
   HTTP.drain
 )
 
+export const CryptoMain = CryptoLive["<<<"](PBKDF2ConfigLive)
+
 export const PersistenceMain = TransactionsLive["<+<"](
   UserPersistenceLive["+++"](CredentialPersistenceLive)
 )
 
-export const CryptoMain = CryptoLive["<+<"](PBKDF2ConfigLive)
-
 export const DbMain = DbLive("main")
-  ["<+<"](TestMigration("main"))
+  ["<<<"](TestMigration("main"))
   ["<+<"](PgPoolLive("main"))
-  ["<+<"](PgConfigTest("main")("dev"))
-  ["<+<"](TestContainersLive("dev"))
+  ["<<<"](PgConfigTest("main")("dev"))
+  ["<<<"](TestContainersLive("dev"))
 
-export const ServerMain = HTTP.LiveHTTP["<+<"](
-  HTTP.serverConfig({
-    host: "0.0.0.0",
-    port: 8081
-  })
-)
+export const ServerConfigMain = HTTP.serverConfig({
+  host: "0.0.0.0",
+  port: 8081
+})
 
-export const BootstrapMain = PersistenceMain["<+<"](
-  DbMain["+++"](ServerMain)["+++"](CryptoMain)
-)
+export const ServerMain = HTTP.LiveHTTP["<<<"](ServerConfigMain)
+
+export const BootstrapMain = PersistenceMain["<+<"](DbMain)
+  ["+++"](ServerMain)
+  ["<<<"](CryptoMain)
 
 // main function (unsafe)
 export function main() {

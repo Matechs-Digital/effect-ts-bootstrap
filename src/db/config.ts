@@ -1,5 +1,5 @@
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
+import { tag } from "@effect-ts/core/Has"
 import type * as PG from "pg"
 
 import { deriveTenants } from "../tenants"
@@ -14,7 +14,7 @@ export interface PgConfig<K extends Databases> {
 }
 
 export const PgConfig = <K extends Databases>(_: K) =>
-  has<PgConfig<K>>().setKey(configs[_])
+  tag<PgConfig<K>>().setKey(configs[_])
 
 export function withConfig<K extends Databases>(_: K) {
   return T.deriveAccess(PgConfig(_))(["config"]).config

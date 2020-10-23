@@ -1,7 +1,7 @@
 import * as O from "@effect-ts/core/Classic/Option"
-import * as S from "@effect-ts/core/Classic/Sync"
 import type { Endomorphism } from "@effect-ts/core/Function"
 import { pipe } from "@effect-ts/core/Function"
+import * as S from "@effect-ts/core/Sync"
 import type { AType, EType } from "@effect-ts/morphic"
 import { DecoderURI, make, opaque } from "@effect-ts/morphic"
 import { decoder } from "@effect-ts/morphic/Decoder"

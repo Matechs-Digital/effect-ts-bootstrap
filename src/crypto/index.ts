@@ -1,6 +1,6 @@
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
+import { tag } from "@effect-ts/core/Has"
 import type { _A } from "@effect-ts/core/Utils"
 import * as crypto from "crypto"
 
@@ -24,7 +24,7 @@ type _config = typeof defaultConfig
 
 export interface PBKDF2Config extends _config {}
 
-export const PBKDF2Config = has<PBKDF2Config>()
+export const PBKDF2Config = tag<PBKDF2Config>()
 
 export const PBKDF2ConfigLive = L.create(PBKDF2Config).pure(defaultConfig)
 export const PBKDF2ConfigTest = L.create(PBKDF2Config).pure({
@@ -108,7 +108,7 @@ export const makeCrypto = T.gen(function* (_) {
 
 export interface Crypto extends _A<typeof makeCrypto> {}
 
-export const Crypto = has<Crypto>()
+export const Crypto = tag<Crypto>()
 
 export const {
   /**

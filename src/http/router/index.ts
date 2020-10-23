@@ -1,10 +1,10 @@
 import * as A from "@effect-ts/core/Classic/Array"
 import * as FA from "@effect-ts/core/Classic/FreeAssociative"
-import type { Has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as F from "@effect-ts/core/Effect/FiberRef"
 import type { Predicate } from "@effect-ts/core/Function"
 import { flow, identity, pipe } from "@effect-ts/core/Function"
+import type { Has } from "@effect-ts/core/Has"
 
 import { accessQueueM, Request } from "../server"
 

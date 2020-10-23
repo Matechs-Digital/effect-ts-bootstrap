@@ -1,7 +1,7 @@
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
+import { tag } from "@effect-ts/core/Has"
 import * as PGM from "node-pg-migrate"
 import type * as MIG from "node-pg-migrate/dist/migration"
 import * as path from "path"
@@ -19,7 +19,7 @@ export interface PgMigration<K extends Databases> {
 }
 
 export const PgMigration = <K extends Databases>(db: K) =>
-  has<PgMigration<K>>().setKey(migrations[db])
+  tag<PgMigration<K>>().setKey(migrations[db])
 
 export function migrateUpDown<K extends Databases>(db: K) {
   return ({ withPoolClientM }: PgPool<K>) =>
