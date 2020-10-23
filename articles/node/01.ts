@@ -56,8 +56,8 @@ const splitString: Transducer<unknown, never, string, string> = transducer(
       (value) =>
         T.gen(function* (_) {
           const currentLeft = yield* _(left.get)
-          const rest = A.fold(A.string)("")(value)
-          const concat = currentLeft + rest
+          const concat = A.fold(A.string)(currentLeft)(value)
+
           if (concat.length === 0) {
             return []
           }
