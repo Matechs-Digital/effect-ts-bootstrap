@@ -26,7 +26,7 @@ export const readFileStream = (path: string) =>
     const bufferStream = yield* _(
       S.effectAsync<unknown, never, string>((cb) => {
         fileStream.on("data", (data: Buffer) => {
-          cb(T.succeed(data.toString("utf-8").split("")))
+          cb(T.succeed([data.toString("utf-8")]))
         })
         fileStream.on("end", () => {
           cb(T.fail(O.none))
