@@ -1,6 +1,6 @@
-import { has } from "@effect-ts/core/Classic/Has"
 import * as T from "@effect-ts/core/Effect"
 import { pipe } from "@effect-ts/core/Function"
+import { tag } from "@effect-ts/core/Has"
 
 // define a module
 export interface ConsoleModule {
@@ -10,7 +10,7 @@ export interface ConsoleModule {
 }
 
 // define a tag for the service
-export const ConsoleModule = has<ConsoleModule>()
+export const ConsoleModule = tag<ConsoleModule>()
 
 // access the module from environment
 export const { log } = T.deriveLifted(ConsoleModule)(["log"], [], [])

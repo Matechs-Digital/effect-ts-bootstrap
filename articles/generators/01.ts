@@ -8,7 +8,7 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import * as Ref from "@effect-ts/core/Effect/Ref"
 import type { NoSuchElementException } from "@effect-ts/system/GlobalExceptions"
-import { has } from "@effect-ts/system/Has"
+import { tag } from "@effect-ts/system/Has"
 
 // simulate a database connection to a key-value store
 export interface DbConnection {
@@ -17,7 +17,7 @@ export interface DbConnection {
 }
 
 // Tag<DbConnection>
-export const DbConnection = has<DbConnection>()
+export const DbConnection = tag<DbConnection>()
 
 // simulate a connection to a message broker
 export interface BrokerConnection {
@@ -25,7 +25,7 @@ export interface BrokerConnection {
 }
 
 // Tag<BrokerConnection>
-export const BrokerConnection = has<BrokerConnection>()
+export const BrokerConnection = tag<BrokerConnection>()
 
 // Database Live Layer
 export const DbLive = L.fromManaged(DbConnection)(

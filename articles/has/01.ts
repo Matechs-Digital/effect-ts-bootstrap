@@ -1,4 +1,4 @@
-import { has } from "@effect-ts/core/Classic/Has"
+import { tag } from "@effect-ts/core/Has"
 
 /**
  * Any interface or type alias
@@ -10,7 +10,7 @@ interface Anything {
 /**
  * Tag<Anything>
  */
-const Anything = has<Anything>()
+const Anything = tag<Anything>()
 
 /**
  * (r: Has<Anything>) => Anything
@@ -46,6 +46,6 @@ console.log(readFromEnv(hasAnything))
  */
 const mySymbol = Symbol()
 
-const Anything_ = has<Anything>().setKey(mySymbol)
+const Anything_ = tag<Anything>().setKey(mySymbol)
 
 console.log((Anything_.of({ a: "bar" }) as any)[mySymbol])

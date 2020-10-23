@@ -6,7 +6,7 @@ import * as M from "@effect-ts/core/Effect/Managed"
 import * as Ref from "@effect-ts/core/Effect/Ref"
 import { pipe } from "@effect-ts/core/Function"
 import type { NoSuchElementException } from "@effect-ts/system/GlobalExceptions"
-import { has } from "@effect-ts/system/Has"
+import { tag } from "@effect-ts/system/Has"
 
 // simulate a database connection to a key-value store
 export interface DbConnection {
@@ -15,7 +15,7 @@ export interface DbConnection {
   readonly clear: T.UIO<void>
 }
 
-export const DbConnection = has<DbConnection>()
+export const DbConnection = tag<DbConnection>()
 
 // simulate a connection to a message broker
 export interface BrokerConnection {
@@ -23,7 +23,7 @@ export interface BrokerConnection {
   readonly clear: T.UIO<void>
 }
 
-export const BrokerConnection = has<BrokerConnection>()
+export const BrokerConnection = tag<BrokerConnection>()
 
 // connect to the database
 export const DbLive = pipe(
