@@ -40,7 +40,7 @@ export const readFileStream = (path: string) =>
     return bufferStream
   })
 
-const splitString: Transducer<unknown, never, string, string> = transducer(
+const getLines: Transducer<unknown, never, string, string> = transducer(
   M.gen(function* (_) {
     const left = yield* _(makeRef(""))
 
@@ -84,7 +84,7 @@ const splitString: Transducer<unknown, never, string, string> = transducer(
 )
 
 readFileStream(path.join(__dirname, "../../tsconfig.json"))
-  ["|>"](S.aggregate(splitString))
+  ["|>"](S.aggregate(getLines))
   ["|>"](S.filter((_) => _.includes("strict")))
   ["|>"](S.map((_) => _.trim()))
   ["|>"](S.runCollect)
