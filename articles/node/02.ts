@@ -9,7 +9,7 @@ import * as M from "@effect-ts/core/Effect/Managed"
 import * as Q from "@effect-ts/core/Effect/Queue"
 import * as Ref from "@effect-ts/core/Effect/Ref"
 import * as S from "@effect-ts/core/Effect/Stream"
-import { pipe } from "@effect-ts/core/Function"
+import { flow, pipe } from "@effect-ts/core/Function"
 import { tag } from "@effect-ts/core/Has"
 import type { _A } from "@effect-ts/core/Utils"
 import * as O from "@effect-ts/system/Option"
@@ -57,7 +57,14 @@ export function readFileStreamBuffer(path: string) {
         )
       )
 
-      return queue.take["|>"](T.chain(E.fold(T.die, (a) => T.succeed([a]))))
+      return queue.take["|>"](
+        T.chain(
+          E.fold(
+            O.fold(() => T.fail(O.none), T.die),
+            (a) => T.succeed([a])
+          )
+        )
+      )
     })
   )
 }
@@ -114,20 +121,21 @@ const transduceMessages = transducer<unknown, never, Buffer, string, unknown>(
 export const makeMessageQueue = (path: string) =>
   M.gen(function* (_) {
     const queue = yield* _(
-      Q.makeUnbounded<string>()["|>"](M.makeExit((q) => q.shutdown))
+      Q.makeUnbounded<O.Option<string>>()["|>"](M.makeExit((q) => q.shutdown))
     )
 
     const messageStream = pipe(
       readFileStreamBuffer(path),
       S.aggregate(transduceMessages),
-      S.chain((s) => S.fromEffect(queue.offer(s)))
+      S.chain(flow(O.some, queue.offer, S.fromEffect))
     )
 
     yield* _(
       messageStream["|>"](S.runDrain)
+        ["|>"](T.tap(() => queue.offer(O.none)))
         ["|>"](T.interruptible)
         ["|>"](T.fork)
-        ["|>"](M.makeExit((f) => T.chain_(F.interrupt(f), () => F.join(f))))
+        ["|>"](M.makeExit((f) => F.interrupt(f)["|>"](T.andThen(F.join(f)))))
     )
 
     return { queue }
@@ -152,11 +160,18 @@ export const program = T.gen(function* (_) {
   while (true) {
     const message = yield* _(queue.take)
 
-    yield* _(
-      T.effectTotal(() => {
-        console.log(message)
-      })
-    )
+    switch (message._tag) {
+      case "None": {
+        return
+      }
+      case "Some": {
+        yield* _(
+          T.effectTotal(() => {
+            console.log(message.value)
+          })
+        )
+      }
+    }
   }
 })
 
