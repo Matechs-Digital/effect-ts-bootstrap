@@ -25,7 +25,7 @@ export function readFileStreamBuffer(path: string) {
           M.makeExit((rs) =>
             T.effectTotal(() => {
               rs.close()
-              //console.debug("CLOSED FILE HANDLE")
+              console.debug("CLOSED FILE HANDLE")
             })
           )
         )
@@ -123,9 +123,7 @@ export const makeMessageQueue = (path: string) =>
       S.chain((s) => S.fromEffect(queue.offer(s)))
     )
 
-    yield* _(
-      messageStream["|>"](S.runDrain)["|>"](T.fork)["|>"](M.makeExit(F.interrupt))
-    )
+    yield* _(messageStream["|>"](S.runDrain)["|>"](T.forkManaged))
 
     return { queue }
   })
