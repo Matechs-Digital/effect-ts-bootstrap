@@ -1,7 +1,6 @@
 import "@effect-ts/core/Operators"
 
 import * as Arr from "@effect-ts/core/Classic/Array"
-import * as E from "@effect-ts/core/Classic/Either"
 import * as T from "@effect-ts/core/Effect"
 import * as F from "@effect-ts/core/Effect/Fiber"
 import * as L from "@effect-ts/core/Effect/Layer"
@@ -32,7 +31,7 @@ export function readFileStreamBuffer(path: string) {
       )
 
       const queue = yield* _(
-        Q.makeUnbounded<E.Either<O.Option<Error>, Buffer>>()["|>"](
+        Q.makeUnbounded<T.IO<O.Option<never>, [Buffer]>>()["|>"](
           M.makeExit((q) => q.shutdown)
         )
       )
@@ -40,13 +39,13 @@ export function readFileStreamBuffer(path: string) {
       yield* _(
         T.effectTotal(() => {
           nodeStream.on("data", (chunk: Buffer) => {
-            T.run(queue.offer(E.right(chunk)))
+            T.run(queue.offer(T.succeed([chunk])))
           })
           nodeStream.on("end", () => {
-            T.run(queue.offer(E.left(O.none)))
+            T.run(queue.offer(T.fail(O.none)))
           })
           nodeStream.on("error", (err) => {
-            T.run(queue.offer(E.left(O.some(err))))
+            T.run(queue.offer(T.die(err)))
           })
         })["|>"](
           M.makeExit(() =>
@@ -57,14 +56,7 @@ export function readFileStreamBuffer(path: string) {
         )
       )
 
-      return queue.take["|>"](
-        T.chain(
-          E.fold(
-            O.fold(() => T.fail(O.none), T.die),
-            (a) => T.succeed([a])
-          )
-        )
-      )
+      return queue.take["|>"](T.flatten)
     })
   )
 }
