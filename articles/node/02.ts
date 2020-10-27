@@ -25,6 +25,7 @@ export function readFileStreamBuffer(path: string) {
           M.makeExit((rs) =>
             T.effectTotal(() => {
               rs.close()
+              //console.debug("CLOSED FILE HANDLE")
             })
           )
         )
