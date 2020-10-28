@@ -116,14 +116,11 @@ export const makeMessageQueue = (path: string) =>
       Q.makeUnbounded<O.Option<string>>()["|>"](M.makeExit((q) => q.shutdown))
     )
 
-    const messageStream = pipe(
-      readFileStreamBuffer(path),
-      S.aggregate(transduceMessages),
-      S.chain(flow(O.some, queue.offer, S.fromEffect))
-    )
-
     yield* $(
-      messageStream["|>"](S.runDrain)
+      readFileStreamBuffer(path)
+        ["|>"](S.aggregate(transduceMessages))
+        ["|>"](S.chain(flow(O.some, queue.offer, S.fromEffect)))
+        ["|>"](S.runDrain)
         ["|>"](T.tap(() => queue.offer(O.none)))
         ["|>"](T.interruptible)
         ["|>"](T.fork)
