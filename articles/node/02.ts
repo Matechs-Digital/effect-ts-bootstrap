@@ -18,8 +18,8 @@ import * as path from "path"
 
 export function readFileStreamBuffer(path: string) {
   return new S.Stream<unknown, never, Buffer>(
-    M.gen(function* (_) {
-      const nodeStream = yield* _(
+    M.gen(function* ($) {
+      const nodeStream = yield* $(
         T.effectTotal(() => fs.createReadStream(path))["|>"](
           M.makeExit((rs) =>
             T.effectTotal(() => {
@@ -30,13 +30,13 @@ export function readFileStreamBuffer(path: string) {
         )
       )
 
-      const queue = yield* _(
+      const queue = yield* $(
         Q.makeUnbounded<T.IO<O.Option<never>, [Buffer]>>()["|>"](
           M.makeExit((q) => q.shutdown)
         )
       )
 
-      yield* _(
+      yield* $(
         T.effectTotal(() => {
           nodeStream.on("data", (chunk: Buffer) => {
             T.run(queue.offer(T.succeed([chunk])))
@@ -62,20 +62,20 @@ export function readFileStreamBuffer(path: string) {
 }
 
 const transduceMessages = transducer<unknown, never, Buffer, string, unknown>(
-  M.gen(function* (_) {
-    const leftover = yield* _(Ref.makeRef(""))
+  M.gen(function* ($) {
+    const leftover = yield* $(Ref.makeRef(""))
 
     return (o) =>
-      T.gen(function* (_) {
+      T.gen(function* ($) {
         if (O.isSome(o)) {
-          yield* _(
+          yield* $(
             leftover["|>"](
               Ref.update((l) => `${l}${Buffer.concat([...o.value]).toString("utf-8")}`)
             )
           )
         }
 
-        const current = yield* _(leftover.get)
+        const current = yield* $(leftover.get)
 
         if (current.length === 0) {
           return []
@@ -84,7 +84,7 @@ const transduceMessages = transducer<unknown, never, Buffer, string, unknown>(
         if (current.endsWith("\n")) {
           const output = current.split("\n")
 
-          yield* _(leftover.set(""))
+          yield* $(leftover.set(""))
 
           return output
         }
@@ -92,11 +92,11 @@ const transduceMessages = transducer<unknown, never, Buffer, string, unknown>(
         const split = current.split("\n")
 
         if (split.length === 1) {
-          yield* _(leftover.set(split[0]))
+          yield* $(leftover.set(split[0]))
 
           return []
         } else {
-          yield* _(leftover.set(split[split.length - 1]))
+          yield* $(leftover.set(split[split.length - 1]))
 
           const init = Arr.init(split)
 
@@ -111,8 +111,8 @@ const transduceMessages = transducer<unknown, never, Buffer, string, unknown>(
 )
 
 export const makeMessageQueue = (path: string) =>
-  M.gen(function* (_) {
-    const queue = yield* _(
+  M.gen(function* ($) {
+    const queue = yield* $(
       Q.makeUnbounded<O.Option<string>>()["|>"](M.makeExit((q) => q.shutdown))
     )
 
@@ -122,7 +122,7 @@ export const makeMessageQueue = (path: string) =>
       S.chain(flow(O.some, queue.offer, S.fromEffect))
     )
 
-    yield* _(
+    yield* $(
       messageStream["|>"](S.runDrain)
         ["|>"](T.tap(() => queue.offer(O.none)))
         ["|>"](T.interruptible)
@@ -140,24 +140,24 @@ export const MessageQueue = tag<MessageQueue>()
 export const LiveMessageQueue = (path: string) =>
   L.fromManaged(MessageQueue)(makeMessageQueue(path))
 
-export const program = T.gen(function* (_) {
-  const { queue } = yield* _(MessageQueue)
+export const program = T.gen(function* ($) {
+  const { queue } = yield* $(MessageQueue)
 
-  yield* _(
+  yield* $(
     T.effectTotal(() => {
       console.log("RUNNING")
     })
   )
 
   while (true) {
-    const message = yield* _(queue.take)
+    const message = yield* $(queue.take)
 
     switch (message._tag) {
       case "None": {
         return
       }
       case "Some": {
-        yield* _(
+        yield* $(
           T.effectTotal(() => {
             console.log(message.value)
           })
