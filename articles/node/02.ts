@@ -20,7 +20,7 @@ export function readFileStreamBuffer(path: string) {
   return new S.Stream<unknown, never, Buffer>(
     M.gen(function* ($) {
       const nodeStream = yield* $(
-        T.effectTotal(() => fs.createReadStream(path))["|>"](
+        T.effectTotal(() => fs.createReadStream(path, { highWaterMark: 100 }))["|>"](
           M.makeExit((rs) =>
             T.effectTotal(() => {
               rs.close()
