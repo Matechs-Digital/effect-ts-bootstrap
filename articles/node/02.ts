@@ -17,7 +17,7 @@ import * as fs from "fs"
 import * as path from "path"
 
 export function readFileStreamBuffer(path: string) {
-  return new S.Stream<unknown, never, Buffer>(
+  return new S.Stream<unknown, Error, Buffer>(
     M.gen(function* ($) {
       const nodeStream = yield* $(
         T.effectTotal(() => fs.createReadStream(path, { highWaterMark: 100 }))["|>"](
@@ -31,7 +31,7 @@ export function readFileStreamBuffer(path: string) {
       )
 
       const queue = yield* $(
-        Q.makeUnbounded<T.IO<O.Option<never>, [Buffer]>>()["|>"](
+        Q.makeUnbounded<T.IO<O.Option<Error>, [Buffer]>>()["|>"](
           M.makeExit((q) => q.shutdown)
         )
       )
@@ -118,7 +118,7 @@ export const makeMessageQueue = (path: string) =>
       Q.makeUnbounded<O.Option<string>>()["|>"](M.makeExit((q) => q.shutdown))
     )
 
-    yield* $(
+    const reader = yield* $(
       readFileStreamBuffer(path)
         ["|>"](S.aggregate(transduceMessages))
         ["|>"](S.chain(flow(O.some, queue.offer, S.fromEffect)))
@@ -126,10 +126,10 @@ export const makeMessageQueue = (path: string) =>
         ["|>"](T.tap(() => queue.offer(O.none)))
         ["|>"](T.interruptible)
         ["|>"](T.fork)
-        ["|>"](M.makeExit((f) => F.interrupt(f)["|>"](T.andThen(F.join(f)))))
+        ["|>"](M.makeExit(F.interrupt))
     )
 
-    return { queue }
+    return { queue, reader }
   })
 
 export interface MessageQueue extends _A<ReturnType<typeof makeMessageQueue>> {}
@@ -139,8 +139,45 @@ export const MessageQueue = tag<MessageQueue>()
 export const LiveMessageQueue = (path: string) =>
   L.fromManaged(MessageQueue)(makeMessageQueue(path))
 
-export const program = T.gen(function* ($) {
+export const makeProcessor = M.gen(function* ($) {
   const { queue } = yield* $(MessageQueue)
+
+  const processor = yield* $(
+    T.gen(function* (_) {
+      while (true) {
+        const message = yield* $(queue.take)
+
+        switch (message._tag) {
+          case "None": {
+            return
+          }
+          case "Some": {
+            yield* $(
+              T.effectTotal(() => {
+                console.log(message.value)
+              })
+            )
+          }
+        }
+      }
+    })
+      ["|>"](T.interruptible)
+      ["|>"](T.fork)
+      ["|>"](M.makeExit(F.interrupt))
+  )
+
+  return { processor }
+})
+
+export interface Processor extends _A<typeof makeProcessor> {}
+
+export const Processor = tag<Processor>()
+
+export const LiveProcessor = L.fromManaged(Processor)(makeProcessor)
+
+export const program = T.gen(function* ($) {
+  const { reader } = yield* $(MessageQueue)
+  const { processor } = yield* $(Processor)
 
   yield* $(
     T.effectTotal(() => {
@@ -148,27 +185,14 @@ export const program = T.gen(function* ($) {
     })
   )
 
-  while (true) {
-    const message = yield* $(queue.take)
-
-    switch (message._tag) {
-      case "None": {
-        return
-      }
-      case "Some": {
-        yield* $(
-          T.effectTotal(() => {
-            console.log(message.value)
-          })
-        )
-      }
-    }
-  }
+  yield* $(T.tuplePar(F.join(processor), F.join(reader)))
 })
 
 const cancel = pipe(
   program,
-  T.provideSomeLayer(LiveMessageQueue(path.join(__dirname, "messages.log"))),
+  T.provideSomeLayer(
+    LiveProcessor["<+<"](LiveMessageQueue(path.join(__dirname, "messages.log")))
+  ),
   T.runMain
 )
 
