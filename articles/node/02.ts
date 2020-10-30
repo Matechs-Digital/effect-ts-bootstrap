@@ -45,7 +45,7 @@ export function readFileStreamBuffer(path: string) {
             T.run(queue.offer(T.fail(O.none)))
           })
           nodeStream.on("error", (err) => {
-            T.run(queue.offer(T.die(err)))
+            T.run(queue.offer(T.fail(O.some(err))))
           })
         })["|>"](
           M.makeExit(() =>
