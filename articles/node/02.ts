@@ -185,7 +185,7 @@ export const program = T.gen(function* ($) {
     })
   )
 
-  yield* $(T.tuplePar(F.join(processor), F.join(reader)))
+  yield* $(T.collectAllUnitPar([F.join(processor), F.join(reader)]))
 })
 
 const cancel = pipe(
