@@ -1,5 +1,5 @@
 import * as O from "@effect-ts/core/Classic/Option"
-import { flow } from "@effect-ts/core/Function"
+import { pipe } from "@effect-ts/core/Function"
 import * as S from "@effect-ts/core/Sync"
 import type { AType, EType } from "@effect-ts/morphic"
 import { DecoderURI, FastCheckURI, make, opaque } from "@effect-ts/morphic"
@@ -24,21 +24,25 @@ const PasswordField_ = make((F) =>
         [FastCheckURI]: (_, { module: fc }) =>
           fc.string({ minLength: 8, maxLength: 32 }),
         [DecoderURI]: (_) => ({
-          decode: flow(
-            _.decode,
-            S.chain((s) =>
-              s.length >= 8 && s.length <= 32
-                ? S.succeed(s)
-                : fail([
-                    {
-                      actual: s,
-                      id: credentialErrorIds.password_length,
-                      name: "password",
-                      message: "password should have between 8 and 32 characters"
-                    }
-                  ])
+          validate: (u, c) =>
+            pipe(
+              _.validate(u, c),
+              S.chain((s) =>
+                s.length >= 8 && s.length <= 32
+                  ? S.succeed(s)
+                  : fail([
+                      {
+                        id: credentialErrorIds.password_length,
+                        name: "password",
+                        message: "password should have between 8 and 32 characters",
+                        context: {
+                          ...c,
+                          actual: s
+                        }
+                      }
+                    ])
+              )
             )
-          )
         })
       }
     })

@@ -39,10 +39,14 @@ it("fail to decode user", () => {
     left(
       new DecodeError([
         {
-          actual: "example.org",
           id: "email_shape",
           message: "email doesn't match the required pattern",
-          name: "email"
+          name: "email",
+          context: {
+            key: "email",
+            types: [],
+            actual: "example.org"
+          }
         }
       ])
     )
@@ -60,10 +64,14 @@ it("decodes id", () => {
     left(
       new DecodeError([
         {
-          actual: "bla",
           id: "bad_id_format",
           message: "id should be an integer",
-          name: "id"
+          name: "id",
+          context: {
+            key: "id",
+            types: [],
+            actual: "bla"
+          }
         }
       ])
     )

@@ -5,7 +5,11 @@ import * as S from "@effect-ts/core/Sync"
 import type { AType, EType } from "@effect-ts/morphic"
 import { DecoderURI, make, opaque } from "@effect-ts/morphic"
 import { decoder } from "@effect-ts/morphic/Decoder"
-import type { Decoder, DecodingError } from "@effect-ts/morphic/Decoder/common"
+import type {
+  Decoder,
+  DecodingError,
+  Validate
+} from "@effect-ts/morphic/Decoder/common"
 import { fail } from "@effect-ts/morphic/Decoder/common"
 import { encoder } from "@effect-ts/morphic/Encoder"
 
@@ -20,16 +24,19 @@ const Id_ = make((F) =>
     id: F.number({
       conf: {
         [DecoderURI]: (_) => ({
-          decode: (u) =>
+          validate: (u, c) =>
             pipe(
-              _.decode(u),
+              _.validate(u, c),
               S.catchAll(() =>
                 fail([
                   {
-                    actual: u,
                     id: commonErrorIds.bad_id_format,
                     name: "id",
-                    message: "id should be an integer"
+                    message: "id should be an integer",
+                    context: {
+                      ...c,
+                      actual: u
+                    }
                   }
                 ])
               )
@@ -54,8 +61,8 @@ export const encodeId = encoder(Id).encode
 export const decodeId = decoder(Id).decode
 export const validateId = validation(Id, commonErrors)
 
-const dateDecoderConfig: Endomorphism<Decoder<Date>> = (_) => ({
-  decode: (u) => (u instanceof Date ? S.succeed(u) : _.decode(u))
+const dateDecoderConfig: Endomorphism<Validate<Date>> = (_) => ({
+  validate: (u, c) => (u instanceof Date ? S.succeed(u) : _.validate(u, c))
 })
 
 const Common_ = make((F) =>

@@ -1,5 +1,5 @@
 import * as O from "@effect-ts/core/Classic/Option"
-import { flow } from "@effect-ts/core/Function"
+import { flow, pipe } from "@effect-ts/core/Function"
 import type { TypeOf } from "@effect-ts/core/Newtype"
 import { newtype, typeDef } from "@effect-ts/core/Newtype"
 import * as S from "@effect-ts/core/Sync"
@@ -34,32 +34,39 @@ const EmailField_ = make((F) =>
           [FastCheckURI]: (_, { module: fc }) =>
             fc.emailAddress().filter((_) => _.length > 0 && _.length <= 255),
           [DecoderURI]: (_) => ({
-            decode: flow(
-              _.decode,
-              S.chain((s) =>
-                s.length > 0 && s.length <= 255
-                  ? /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(
-                      s
-                    )
-                    ? S.succeed(s)
+            validate: (u, c) =>
+              pipe(
+                _.validate(u, c),
+                S.chain((s) =>
+                  s.length > 0 && s.length <= 255
+                    ? /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(
+                        s
+                      )
+                      ? S.succeed(s)
+                      : fail([
+                          {
+                            id: userErrorIds.email_shape,
+                            name: "email",
+                            message: "email doesn't match the required pattern",
+                            context: {
+                              ...c,
+                              actual: s
+                            }
+                          }
+                        ])
                     : fail([
                         {
-                          actual: s,
-                          id: userErrorIds.email_shape,
+                          id: userErrorIds.email_length,
                           name: "email",
-                          message: "email doesn't match the required pattern"
+                          message: "email should be between 0 and 255 characters long",
+                          context: {
+                            ...c,
+                            actual: s
+                          }
                         }
                       ])
-                  : fail([
-                      {
-                        actual: s,
-                        id: userErrorIds.email_length,
-                        name: "email",
-                        message: "email should be between 0 and 255 characters long"
-                      }
-                    ])
+                )
               )
-            )
           })
         }
       })
@@ -105,21 +112,25 @@ export const UserIdField = make((F) =>
       conf: {
         [FastCheckURI]: (_, { module: fc }) => fc.integer(1, 1000000),
         [DecoderURI]: (_) => ({
-          decode: flow(
-            _.decode,
-            S.chain((s) =>
-              s > 0
-                ? S.succeed(s)
-                : fail([
-                    {
-                      actual: s,
-                      id: userErrorIds.user_id_negative,
-                      name: "userId",
-                      message: "userId should be positive"
-                    }
-                  ])
+          validate: (u, c) =>
+            pipe(
+              _.validate(u, c),
+              S.chain((s) =>
+                s > 0
+                  ? S.succeed(s)
+                  : fail([
+                      {
+                        id: userErrorIds.user_id_negative,
+                        name: "userId",
+                        message: "userId should be positive",
+                        context: {
+                          ...c,
+                          actual: s
+                        }
+                      }
+                    ])
+              )
             )
-          )
         })
       }
     })
