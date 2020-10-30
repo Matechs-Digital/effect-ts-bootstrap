@@ -70,7 +70,9 @@ const transduceMessages = transducer<unknown, never, Buffer, string, unknown>(
         if (O.isSome(o)) {
           yield* $(
             leftover["|>"](
-              Ref.update((l) => `${l}${Buffer.concat([...o.value]).toString("utf-8")}`)
+              Ref.update(
+                (l) => `${l}${Buffer.concat(o.value as Buffer[]).toString("utf-8")}`
+              )
             )
           )
         }
