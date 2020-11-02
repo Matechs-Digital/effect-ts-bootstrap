@@ -1,25 +1,57 @@
-import * as A from "@effect-ts/core/Classic/Array"
-import * as O from "@effect-ts/core/Classic/Option"
-import * as DSL from "@effect-ts/core/Prelude/DSL"
-import { isOption } from "@effect-ts/core/Utils"
+import * as T from "@effect-ts/core/Effect"
+import { pipe } from "@effect-ts/core/Function"
+import type { _E, _R } from "@effect-ts/core/Utils"
 
-const adapter: {
-  <A>(_: O.Option<A>): DSL.GenHKT<A.Array<A>, A>
-  <A>(_: A.Array<A>): DSL.GenHKT<A.Array<A>, A>
-} = (_: any) => {
-  if (isOption(_)) {
-    return new DSL.GenHKT(_._tag === "None" ? [] : [_.value])
+export class GenEffect<K, A> {
+  constructor(readonly op: K) {}
+
+  *[Symbol.iterator](): Generator<GenEffect<K, A>, A, any> {
+    return yield this
   }
-  return new DSL.GenHKT(_)
 }
 
-const gen = DSL.genWithHistoryF(A.Monad, { adapter })
+const adapter = (_: any) => {
+  return new GenEffect(_)
+}
 
-const res = gen(function* (_) {
-  const a = yield* _(O.some(0))
-  const x = yield* _(A.range(a, 10))
+export function gen<Eff extends GenEffect<any, any>, AEff>(
+  f: (i: {
+    <R, E, A>(_: T.Effect<R, E, A>): GenEffect<T.Effect<R, E, A>, A>
+  }) => Generator<Eff, AEff, any>
+): T.Effect<_R<Eff["op"]>, _E<Eff["op"]>, AEff> {
+  return T.suspend(() => {
+    const iterator = f(adapter as any)
+    const state = iterator.next()
 
-  return yield* _(A.range(x, x + 10))
+    function run(
+      state: IteratorYieldResult<Eff> | IteratorReturnResult<AEff>
+    ): T.Effect<any, any, AEff> {
+      if (state.done) {
+        return T.succeed(state.value)
+      }
+      return T.chain_(state.value["op"], (val) => {
+        const next = iterator.next(val)
+        return run(next)
+      })
+    }
+
+    return run(state)
+  })
+}
+
+const program = gen(function* (_) {
+  const a = yield* _(T.succeed(1))
+  const b = yield* _(T.succeed(2))
+
+  return a + b
 })
 
-console.log(res)
+pipe(
+  program,
+  T.chain((n) =>
+    T.effectTotal(() => {
+      console.log(n)
+    })
+  ),
+  T.runMain
+)
