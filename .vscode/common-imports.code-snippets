@@ -71,12 +71,12 @@
   },
   "Async": {
     "prefix": "+As",
-    "body": ["import * as As from \"@effect-ts/core/Classic/Async\""],
+    "body": ["import * as As from \"@effect-ts/core/Async\""],
     "description": "Async as As"
   },
   "Sync": {
     "prefix": "+Sy",
-    "body": ["import * as Sy from \"@effect-ts/core/Classic/Sync\""],
+    "body": ["import * as Sy from \"@effect-ts/core/Sync\""],
     "description": "Sync as Sy"
   },
   "Either": {

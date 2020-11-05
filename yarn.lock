@@ -273,32 +273,32 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@effect-ts/core@^0.7.25":
-  version "0.7.25"
-  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.7.25.tgz#77d26bbfc2e61f470f8fa7aaee65e607cb9b569d"
-  integrity sha512-PCHsPdKcFewLjqvspyNPAuaqDAaCEeduA+Yr3pxvYBI6StoQM+xgeCQ2XhRcYQO4UfBdM7PrPImqyW3OtwP58w==
+"@effect-ts/core@^0.7.45":
+  version "0.7.45"
+  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.7.45.tgz#672d88d19909b227ba35cc40ddc0b46ee34c579d"
+  integrity sha512-57Cvd41mLTMSfC2hVG4wvic+20DRwAN4oLXrSPRNNHLl31FuFCJRUdXh64CYmvOxGi2+MSpXkR80lVt6SQgWpA==
   dependencies:
-    "@effect-ts/system" "^0.5.19"
+    "@effect-ts/system" "^0.5.35"
 
-"@effect-ts/monocle@^0.6.26":
-  version "0.6.26"
-  resolved "https://registry.yarnpkg.com/@effect-ts/monocle/-/monocle-0.6.26.tgz#143d2e2c372b0efeb8c2cd562a49d7c403a54cef"
-  integrity sha512-T6FYU3tJCnMY0TQAvzLjArjXCtrwlhITd2CFzItJL8K8lfwXLovUxUJPEWzh+CTPdQMO2y8d45K36aKv1OFPXA==
+"@effect-ts/monocle@^0.6.46":
+  version "0.6.46"
+  resolved "https://registry.yarnpkg.com/@effect-ts/monocle/-/monocle-0.6.46.tgz#8f707eb584d5800a8ae2010641abb01a0ccc005b"
+  integrity sha512-mqQy08cF80Wt8+LZrPPFLKu1JXiupJWmHh0EM2PE60lwOvUjlenioyLdvHeTPYnppOzUrlKuq5/NJo6iY5M3cA==
   dependencies:
-    "@effect-ts/core" "^0.7.25"
+    "@effect-ts/core" "^0.7.45"
 
-"@effect-ts/morphic@^0.6.7":
-  version "0.6.7"
-  resolved "https://registry.yarnpkg.com/@effect-ts/morphic/-/morphic-0.6.7.tgz#2a606ff85abe7ce3ec63aada6fd9de4caa4ded7c"
-  integrity sha512-0t2v4gmFtv2r5MLdY377y110sd2YNmIi6xvxq6mdjxjnT3flzAqVuBib8+ulQVZVCWqllid5jOHjDeNqwZZlLQ==
+"@effect-ts/morphic@^0.7.16":
+  version "0.7.16"
+  resolved "https://registry.yarnpkg.com/@effect-ts/morphic/-/morphic-0.7.16.tgz#1bfb0f2d3f5cc5848a79487f59b1273b9eefabed"
+  integrity sha512-Q3VX+8zzfrADcguBqpb1ILbiLsXCKcRPqRfgkjNkvAIGgJXliELMwwbfIxozKfW+OyAoEZa4EVq2kYlO6kadSw==
   dependencies:
-    "@effect-ts/core" "^0.7.25"
-    "@effect-ts/monocle" "^0.6.26"
+    "@effect-ts/core" "^0.7.45"
+    "@effect-ts/monocle" "^0.6.46"
 
-"@effect-ts/system@^0.5.19":
-  version "0.5.19"
-  resolved "https://registry.yarnpkg.com/@effect-ts/system/-/system-0.5.19.tgz#c9dd8cc89a5d522ab00d48d99af9238b19e09c9d"
-  integrity sha512-BiolSAk7ycG89BMa4y8eA8yh+/yFkc3m7H02Pdf0PmTpDpcCs/T6EpPwqFaTJdBslGMYdl93BNQwiE8RIWcQMg==
+"@effect-ts/system@^0.5.35":
+  version "0.5.35"
+  resolved "https://registry.yarnpkg.com/@effect-ts/system/-/system-0.5.35.tgz#7748f5cfc236efcd9d5ab86f98fa7c4fcdb509c5"
+  integrity sha512-UMQwp8scNd+zo3jCRiM+QJBm79VGbd6Soi3zD+5QSn6s9c3g6OA1re0oTcMW8wL3Rkh48fuiOSEQh8XrzfbIrw==
 
 "@eslint/eslintrc@^0.1.3":
   version "0.1.3"

@@ -79,14 +79,14 @@ export interface EmailFieldRaw extends EType<typeof EmailField_> {}
 
 export const EmailField = opaque<EmailFieldRaw, EmailField>()(EmailField_)
 
-const CreateUser_ = make((F) => F.intersection([EmailField(F)]))
+const CreateUser_ = make((F) => F.intersection(EmailField(F))())
 
 export interface CreateUser extends AType<typeof CreateUser_> {}
 export interface CreateUserRaw extends EType<typeof CreateUser_> {}
 
 export const CreateUser = opaque<CreateUserRaw, CreateUser>()(CreateUser_)
 
-const User_ = make((F) => F.intersection([Id(F), EmailField(F), Common(F)]))
+const User_ = make((F) => F.intersection(Id(F), EmailField(F), Common(F))())
 
 export interface User extends AType<typeof User_> {}
 export interface UserRaw extends EType<typeof User_> {}

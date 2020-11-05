@@ -55,7 +55,7 @@ export interface PasswordFieldRaw extends EType<typeof PasswordField_> {}
 export const PasswordField = opaque<PasswordFieldRaw, PasswordField>()(PasswordField_)
 
 const CreateCredential_ = make((F) =>
-  F.intersection([UserIdField(F), PasswordField(F)])
+  F.intersection(UserIdField(F), PasswordField(F))()
 )
 
 export interface CreateCredential extends AType<typeof CreateCredential_> {}
@@ -78,14 +78,14 @@ export const CredentialHash = opaque<CredentialHashRaw, CredentialHash>()(
   CredentialHash_
 )
 
-const Credential_ = make((F) => F.intersection([Id(F), CredentialHash(F), Common(F)]))
+const Credential_ = make((F) => F.intersection(Id(F), CredentialHash(F), Common(F))())
 
 export interface Credential extends AType<typeof Credential_> {}
 export interface CredentialRaw extends EType<typeof Credential_> {}
 
 export const Credential = opaque<CredentialRaw, Credential>()(Credential_)
 
-const UpdateCredential_ = make((F) => F.intersection([Id(F), CreateCredential(F)]))
+const UpdateCredential_ = make((F) => F.intersection(Id(F), CreateCredential(F))())
 
 export interface UpdateCredential extends AType<typeof UpdateCredential_> {}
 export interface UpdateCredentialRaw extends EType<typeof UpdateCredential_> {}
