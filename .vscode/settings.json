@@ -2,6 +2,9 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "editor.formatOnSave": true,
   "eslint.format.enable": true,
+  "jest.debugMode": true,
+  "jest.showCoverageOnLoad": true,
+  "jest.autoEnable": true,
   "[javascript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
