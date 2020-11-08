@@ -1,15 +1,16 @@
 import "@effect-ts/core/Operators"
 
 import * as T from "@effect-ts/core/Effect"
-import { pretty } from "@effect-ts/core/Effect/Cause"
+import * as C from "@effect-ts/core/Effect/Cause"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import * as Pr from "@effect-ts/core/Effect/Promise"
-import { pipe, tuple } from "@effect-ts/core/Function"
+import { identity, pipe, tuple } from "@effect-ts/core/Function"
 import { None } from "@effect-ts/system/Fiber"
 
 export interface TestRuntime<R> {
+  it: <E, A>(name: string, self: () => T.Effect<R & T.DefaultEnv, E, A>) => void
   runPromise: <E, A>(self: T.Effect<R & T.DefaultEnv, E, A>) => Promise<A>
   runPromiseExit: <E, A>(
     self: T.Effect<R & T.DefaultEnv, E, A>
@@ -51,11 +52,27 @@ export function testRuntime<R>(self: L.Layer<T.DefaultEnv, never, R>) {
         ["|>"](T.runPromiseExit)
 
       if (res._tag === "Failure") {
-        throw new Error(pretty(res.cause))
+        throw new Error(C.pretty(res.cause))
       }
     }, close)
 
     return {
+      it: (name, self) =>
+        it(name, () =>
+          promiseEnv["|>"](Pr.await)
+            ["|>"](T.chain((r) => self()["|>"](T.provide(r))))
+            ["|>"](T.runPromiseExit)
+            .then((exit) => {
+              switch (exit._tag) {
+                case "Success": {
+                  return Promise.resolve(exit.value)
+                }
+                case "Failure": {
+                  return Promise.reject(C.squash(identity)(exit.cause))
+                }
+              }
+            })
+        ),
       runPromise: (self) =>
         promiseEnv["|>"](Pr.await)
           ["|>"](T.chain((r) => self["|>"](T.provide(r))))
