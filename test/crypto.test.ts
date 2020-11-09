@@ -36,25 +36,25 @@ describe("Crypto Suite", () => {
   })
 
   describe("Test", () => {
-    const { runPromise, runPromiseExit } = testRuntime(
-      CryptoLive["<<<"](PBKDF2ConfigTest)
-    )
+    const { it } = testRuntime(CryptoLive["<<<"](PBKDF2ConfigTest))
 
-    it("should hash and verify password", async () => {
-      const password = "wuihfjierngjkrnjgwrgn"
-      const hash = await runPromise(hashPassword(password))
-      const verify = await runPromiseExit(verifyPassword(password, hash))
+    it("should hash and verify password", () =>
+      T.gen(function* (_) {
+        const password = "wuihfjierngjkrnjgwrgn"
+        const hash = yield* _(hashPassword(password))
+        const verify = yield* _(T.result(verifyPassword(password, hash)))
 
-      expect(verify).toEqual(Ex.unit)
-    })
+        expect(verify).toEqual(Ex.unit)
+      }))
 
-    it("should hash and not verify password", async () => {
-      const password = "wuihfjierngjkrnjgwrgn"
-      const passwordBad = "wuIhfjierngjkrnjgwrgn"
-      const hash = await runPromise(hashPassword(password))
-      const verify = await runPromiseExit(verifyPassword(passwordBad, hash))
+    it("should hash and not verify password", () =>
+      T.gen(function* (_) {
+        const password = "wuihfjierngjkrnjgwrgn"
+        const passwordBad = "wuIhfjierngjkrnjgwrgn"
+        const hash = yield* _(hashPassword(password))
+        const verify = yield* _(T.result(verifyPassword(passwordBad, hash)))
 
-      expect(verify).toEqual(Ex.fail(new InvalidPassword()))
-    })
+        expect(verify).toEqual(Ex.fail(new InvalidPassword()))
+      }))
   })
 })
