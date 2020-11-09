@@ -4,6 +4,7 @@ import * as F from "@effect-ts/core/Effect/Fiber"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as M from "@effect-ts/core/Effect/Managed"
 import type { _A } from "@effect-ts/core/Utils"
+import { testRuntime } from "@effect-ts/jest/Runtime"
 import * as Lens from "@effect-ts/monocle/Lens"
 import { arbitrary } from "@effect-ts/morphic/FastCheck"
 import { tag } from "@effect-ts/system/Has"
@@ -33,7 +34,6 @@ import { register } from "../src/persistence/transactions"
 import { createUser, getUser, updateUser } from "../src/persistence/user"
 import { Main, PersistenceMain, ServerMain } from "../src/program"
 import { assertSuccess } from "./utils/assertions"
-import { testRuntime } from "./utils/runtime"
 
 export function makeAppFiber() {
   return Main["|>"](T.fork)
@@ -60,7 +60,7 @@ const BootstrapTest = AppFiberTest["<+<"](PersistenceMain)["<+<"](
 )
 
 describe("Integration Suite", () => {
-  const { runPromiseExit } = testRuntime(BootstrapTest)({
+  const { runPromiseExit } = testRuntime(BootstrapTest, {
     open: 30_000,
     close: 30_000
   })
