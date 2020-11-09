@@ -1,7 +1,5 @@
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
-import * as L from "@effect-ts/core/Effect/Layer"
-import { pipe } from "@effect-ts/core/Function"
 import { testRuntime } from "@effect-ts/jest/Runtime"
 
 import {
